@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "690508403495",
+    "project_id": "legoking-vua3618",
+    "storage_bucket": "legoking-vua3618.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:690508403495:android:e2c86cb6d91cabec5dcf02",
+        "android_client_info": {
+          "package_name": "com.example.project_prm393"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9pqZ48R7Zo3W7cZa1M8TcECOxCSgMndo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:690508403495:android:5aea993b81c2cf435dcf02",
+        "android_client_info": {
+          "package_name": "com.prm393.legoking"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9pqZ48R7Zo3W7cZa1M8TcECOxCSgMndo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
