@@ -31,7 +31,7 @@ class DefaultFirebaseOptions {
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
+              'you can reconfigure this by running the FlutterFire CLI again.',
         );
       default:
         throw UnsupportedError(
@@ -52,35 +52,37 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyC9pqZ48R7Zo3W7cZa1M8TcECOxCSgMndo',
-    appId: '1:690508403495:android:e2c86cb6d91cabec5dcf02',
+    appId: '1:690508403495:android:4cca5357e9ed2fa75dcf02',
     messagingSenderId: '690508403495',
     projectId: 'legoking-vua3618',
     storageBucket: 'legoking-vua3618.firebasestorage.app',
   );
+
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDif_BaKuhmHCe9Dr8ay-aXwsghOurE2qk',
-    appId: '1:690508403495:ios:ef2f30ee7f6e1dc95dcf02',
+    appId: '1:690508403495:ios:22379468235f4ded5dcf02',
     messagingSenderId: '690508403495',
     projectId: 'legoking-vua3618',
     storageBucket: 'legoking-vua3618.firebasestorage.app',
-    iosBundleId: 'com.example.projectPrm393',
+    iosBundleId: 'com.example.project',
   );
+
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyDif_BaKuhmHCe9Dr8ay-aXwsghOurE2qk',
-    appId: '1:690508403495:ios:ef2f30ee7f6e1dc95dcf02',
+    appId: '1:690508403495:ios:22379468235f4ded5dcf02',
     messagingSenderId: '690508403495',
     projectId: 'legoking-vua3618',
     storageBucket: 'legoking-vua3618.firebasestorage.app',
-    iosBundleId: 'com.example.projectPrm393',
+    iosBundleId: 'com.example.project',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyA4GsFrBQmNMSm7zZHC-uUPQrbLPtN22Pk',
-    appId: '1:690508403495:web:075ffb6201af38655dcf02',
+    appId: '1:690508403495:web:2f5b4ca48151a9ab5dcf02',
     messagingSenderId: '690508403495',
     projectId: 'legoking-vua3618',
     authDomain: 'legoking-vua3618.firebaseapp.com',
     storageBucket: 'legoking-vua3618.firebasestorage.app',
-    measurementId: 'G-QF8Q1Z2BVS',
+    measurementId: 'G-HE4SK22PH2',
   );
 }
