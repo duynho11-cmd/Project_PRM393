@@ -18,7 +18,7 @@ import 'screens/profile_screen.dart';
 import 'screens/edit_profile_screen.dart';
 import 'seller/seller_orders_screen.dart';
 import 'seller/seller_add_product_screen.dart';
-import 'seller//seller_products_screen.dart';
+import 'seller/seller_products_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
