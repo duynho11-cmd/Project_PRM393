@@ -10,8 +10,19 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  static const Color primaryBlue = Color(0xFF4A90E2);
+  static const Color darkBlue = Color(0xFF0B4DBA);
+  static const Color primaryYellow = Color(0xFFFFD93D);
+  static const Color bgColor = Color(0xFFF8FAFC);
+  static const Color textDark = Color(0xFF111827);
+  static const Color textGrey = Color(0xFF64748B);
+
   final emailController = TextEditingController();
   bool isLoading = false;
+
+  bool isValidEmail(String email) {
+    return RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$').hasMatch(email);
+  }
 
   Future<void> sendResetEmail() async {
     final email = emailController.text.trim();
@@ -19,6 +30,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Vui lòng nhập email")),
+      );
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Email không hợp lệ")),
       );
       return;
     }
@@ -51,110 +69,244 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
+  Widget buildHeader() {
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            darkBlue,
+            primaryBlue,
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: darkBlue.withOpacity(0.18),
+            blurRadius: 28,
+            offset: const Offset(0, 14),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Expanded(
+            child: Text(
+              "Khôi phục\nmật khẩu",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+                height: 1.25,
+              ),
+            ),
+          ),
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: Colors.white24,
+              borderRadius: BorderRadius.circular(26),
+            ),
+            child: const Icon(
+              Icons.lock_reset_rounded,
+              color: primaryYellow,
+              size: 44,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildInfoCard() {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: primaryBlue.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: primaryBlue.withOpacity(0.18),
+        ),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.info_outline_rounded,
+            color: darkBlue,
+            size: 22,
+          ),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              "Nhập email đã đăng ký. LegoKing sẽ gửi link đặt lại mật khẩu vào hộp thư của bạn.",
+              style: TextStyle(
+                color: textGrey,
+                fontSize: 14,
+                height: 1.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildEmailInput() {
+    return TextField(
+      controller: emailController,
+      keyboardType: TextInputType.emailAddress,
+      textInputAction: TextInputAction.done,
+      onSubmitted: (_) => sendResetEmail(),
+      decoration: InputDecoration(
+        labelText: "Email",
+        hintText: "example@gmail.com",
+        prefixIcon: const Icon(
+          Icons.email_outlined,
+          color: textGrey,
+        ),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 18,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(22),
+          borderSide: const BorderSide(
+            color: Color(0xFFE5E7EB),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(22),
+          borderSide: const BorderSide(
+            color: primaryBlue,
+            width: 1.5,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildSubmitButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 58,
+      child: ElevatedButton.icon(
+        onPressed: isLoading ? null : sendResetEmail,
+        icon: isLoading
+            ? const SizedBox()
+            : const Icon(Icons.send_rounded),
+        label: isLoading
+            ? const SizedBox(
+          width: 25,
+          height: 25,
+          child: CircularProgressIndicator(
+            color: Colors.white,
+            strokeWidth: 2.6,
+          ),
+        )
+            : const Text(
+          "Gửi link đặt lại mật khẩu",
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: darkBlue,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: darkBlue.withOpacity(0.65),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildBackLoginButton() {
+    return TextButton.icon(
+      onPressed: () {
+        Navigator.pop(context);
+      },
+      icon: const Icon(
+        Icons.arrow_back_rounded,
+        size: 18,
+      ),
+      label: const Text(
+        "Quay lại đăng nhập",
+        style: TextStyle(
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+      style: TextButton.styleFrom(
+        foregroundColor: darkBlue,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8FAFC),
-        elevation: 0,
         title: const Text(
           "Quên mật khẩu",
           style: TextStyle(
-            color: Color(0xFF0B4DBA),
-            fontWeight: FontWeight.bold,
+            color: textDark,
+            fontWeight: FontWeight.w800,
           ),
         ),
-        iconTheme: const IconThemeData(
-          color: Color(0xFF0B4DBA),
-        ),
+        backgroundColor: bgColor,
+        foregroundColor: textDark,
+        elevation: 0,
+        centerTitle: false,
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              const SizedBox(height: 40),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+          children: [
+            buildHeader(),
 
-              Image.asset(
-                'assets/images/logo.png',
-                height: 130,
-              ),
+            const SizedBox(height: 24),
 
-              const SizedBox(height: 30),
+            buildInfoCard(),
 
-              const Text(
-                "Khôi phục mật khẩu",
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0B4DBA),
-                ),
-              ),
+            const SizedBox(height: 24),
 
-              const SizedBox(height: 12),
-
-              const Text(
-                "Nhập email tài khoản của bạn. LegoKing sẽ gửi link đặt lại mật khẩu.",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 15,
-                  height: 1.5,
-                ),
-              ),
-
-              const SizedBox(height: 36),
-
-              TextField(
-                controller: emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  hintText: "Email",
-                  prefixIcon: const Icon(Icons.email_outlined),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 18,
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
                   ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(18),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
+                ],
               ),
-
-              const SizedBox(height: 28),
-
-              SizedBox(
-                width: double.infinity,
-                height: 58,
-                child: ElevatedButton(
-                  onPressed: isLoading ? null : sendResetEmail,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0B4DBA),
-                    disabledBackgroundColor: Colors.grey,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                  ),
-                  child: isLoading
-                      ? const CircularProgressIndicator(
-                    color: Colors.white,
-                  )
-                      : const Text(
-                    "Gửi link đặt lại mật khẩu",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+              child: Column(
+                children: [
+                  buildEmailInput(),
+                  const SizedBox(height: 18),
+                  buildSubmitButton(),
+                ],
               ),
-            ],
-          ),
+            ),
+
+            const SizedBox(height: 18),
+
+            buildBackLoginButton(),
+          ],
         ),
       ),
     );
