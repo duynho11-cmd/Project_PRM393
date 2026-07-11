@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../constants/app_images.dart';
+
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -9,27 +11,32 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
+  static const Color primaryBlue = Color(0xFF4A90E2);
+  static const Color primaryYellow = Color(0xFFFFD93D);
+  static const Color primaryGreen = Color(0xFF22C55E);
+
   final PageController _pageController = PageController();
   int currentPage = 0;
 
   final List<Map<String, dynamic>> pages = [
     {
-      'icon': Icons.toys,
+      'image': AppImages.onboarding1,
       'title': 'Chào mừng đến với LegoKing',
-      'description': 'Khám phá hàng ngàn món đồ chơi hấp dẫn cho bé yêu.',
-      'color': Color(0xFF4A90E2),
+      'description': 'Khám phá hàng ngàn món đồ chơi LEGO hấp dẫn cho bé yêu.',
+      'color': primaryBlue,
     },
     {
-      'icon': Icons.category,
+      'image': AppImages.onboarding2,
       'title': 'Khám phá danh mục',
-      'description': 'Dễ dàng tìm kiếm LEGO, gấu bông, xe điều khiển và nhiều hơn nữa.',
-      'color': Color(0xFFFFD93D),
+      'description':
+      'Tìm kiếm LEGO, gấu bông, xe điều khiển và nhiều sản phẩm thú vị.',
+      'color': primaryYellow,
     },
     {
-      'icon': Icons.verified_user,
-      'title': 'An toàn - Chất lượng - Uy tín',
-      'description': 'Chúng tôi chỉ cung cấp những sản phẩm tốt nhất cho trẻ em.',
-      'color': Color(0xFF6BCB77),
+      'image': AppImages.onboarding3,
+      'title': 'An toàn - Chất lượng',
+      'description': 'Sản phẩm chính hãng, an toàn và phù hợp cho trẻ em.',
+      'color': primaryGreen,
     },
   ];
 
@@ -57,136 +64,183 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      width: isActive ? 24 : 8,
-      height: 8,
+      margin: const EdgeInsets.symmetric(horizontal: 5),
+      width: isActive ? 28 : 9,
+      height: 9,
       decoration: BoxDecoration(
-        color: isActive ? const Color(0xFF4A90E2) : Colors.grey.shade300,
-        borderRadius: BorderRadius.circular(20),
+        color: isActive ? primaryBlue : Colors.grey.shade300,
+        borderRadius: BorderRadius.circular(30),
       ),
     );
   }
 
   @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final page = pages[currentPage];
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Align(
-              alignment: Alignment.topRight,
-              child: TextButton(
-                onPressed: _finishOnboarding,
-                child: const Text(
-                  'Bỏ qua',
-                  style: TextStyle(
-                    color: Color(0xFF4A90E2),
-                    fontWeight: FontWeight.w600,
+      body: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              (page['color'] as Color).withOpacity(0.18),
+              const Color(0xFFF8FAFC),
+              Colors.white,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'LegoKing',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: primaryBlue,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: _finishOnboarding,
+                      child: const Text(
+                        'Bỏ qua',
+                        style: TextStyle(
+                          color: Color(0xFF64748B),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: pages.length,
+                  onPageChanged: (index) {
+                    setState(() {
+                      currentPage = index;
+                    });
+                  },
+                  itemBuilder: (context, index) {
+                    final item = pages[index];
+                    final Color itemColor = item['color'] as Color;
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 26),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: double.infinity,
+                            height: 330,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(36),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: itemColor.withOpacity(0.25),
+                                  blurRadius: 30,
+                                  offset: const Offset(0, 16),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(36),
+                              child: Image.asset(
+                                item['image'],
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 46),
+
+                          Text(
+                            item['title'],
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF111827),
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          Text(
+                            item['description'],
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              height: 1.6,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  pages.length,
+                      (index) => _buildIndicator(index),
+                ),
+              ),
+
+              const SizedBox(height: 30),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 26),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 58,
+                  child: ElevatedButton(
+                    onPressed: _nextPage,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryBlue,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(22),
+                      ),
+                    ),
+                    child: Text(
+                      currentPage == pages.length - 1
+                          ? 'Bắt đầu ngay'
+                          : 'Tiếp tục',
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: pages.length,
-                onPageChanged: (index) {
-                  setState(() {
-                    currentPage = index;
-                  });
-                },
-                itemBuilder: (context, index) {
-                  final page = pages[index];
-
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 220,
-                          height: 220,
-                          decoration: BoxDecoration(
-                            color: page['color'].withValues(alpha: 0.16),
-                            borderRadius: BorderRadius.circular(40),
-                          ),
-                          child: Icon(
-                            page['icon'],
-                            size: 110,
-                            color: page['color'],
-                          ),
-                        ),
-
-                        const SizedBox(height: 42),
-
-                        Text(
-                          page['title'],
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1F2937),
-                          ),
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        Text(
-                          page['description'],
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            height: 1.5,
-                            color: Color(0xFF6B7280),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                pages.length,
-                    (index) => _buildIndicator(index),
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 28),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _nextPage,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4A90E2),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    currentPage == pages.length - 1 ? 'Bắt đầu' : 'Tiếp tục',
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 28),
-          ],
+              const SizedBox(height: 26),
+            ],
+          ),
         ),
       ),
     );
