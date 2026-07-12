@@ -21,21 +21,36 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _startLoading() {
-    Timer.periodic(const Duration(milliseconds: 40), (timer) {
-      setState(() {
-        progress += 0.02;
-      });
+    Timer.periodic(
+      const Duration(milliseconds: 40),
+          (timer) {
+        if (!mounted) {
+          timer.cancel();
+          return;
+        }
 
-      if (progress >= 1) {
-        timer.cancel();
-        _checkNavigation();
-      }
-    });
+        setState(() {
+          progress += 0.02;
+          if (progress > 1) progress = 1;
+        });
+
+        if (progress >= 1) {
+          timer.cancel();
+          _checkNavigation();
+        }
+      },
+    );
   }
 
   Future<void> _checkNavigation() async {
     final prefs = await SharedPreferences.getInstance();
-    final bool seenOnboarding = prefs.getBool('seenOnboarding') ?? false;
+
+    // Chỉ dùng khi test onboarding
+    await prefs.remove('seenOnboarding');
+
+    final bool seenOnboarding =
+        prefs.getBool('seenOnboarding') ?? false;
+
     final user = FirebaseAuth.instance.currentUser;
 
     if (!mounted) return;
@@ -52,82 +67,119 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF4A90E2),
-      body: SafeArea(
-        child: Center(
+      body: Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF4A90E2),
+              Color(0xFFFFD93D),
+            ],
+          ),
+        ),
+        child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(28),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 24,
+            ),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Spacer(),
 
-                Container(
-                  width: 140,
-                  height: 140,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(32),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      fit: BoxFit.contain,
-                    ),
+                Hero(
+                  tag: "logo",
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    width: 260,
                   ),
                 ),
+
                 const SizedBox(height: 24),
 
-                const Text(
-                  'LegoKing',
-                  style: TextStyle(
-                    fontSize: 34,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
+                // const Text(
+                //   "LEGOKING",
+                //   style: TextStyle(
+                //     fontSize: 38,
+                //     fontWeight: FontWeight.bold,
+                //     color: Colors.white,
+                //     letterSpacing: 1.5,
+                //   ),
+                // ),
 
                 const SizedBox(height: 8),
 
                 const Text(
-                  'Thế giới đồ chơi cho bé',
+                  "THẾ GIỚI LEGO CHÍNH HÃNG",
                   style: TextStyle(
-                    fontSize: 16,
                     color: Colors.white70,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1,
                   ),
                 ),
 
                 const Spacer(),
 
-                LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 8,
-                  borderRadius: BorderRadius.circular(20),
-                  backgroundColor: Colors.white24,
-                  valueColor: const AlwaysStoppedAnimation<Color>(
-                    Color(0xFFFFD93D),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
                 Text(
-                  '${(progress * 100).toInt()}%',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
+                  "Đang chuẩn bị những viên gạch cuối cùng...",
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 15,
                   ),
                 ),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 18),
+
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 10,
+                    backgroundColor: Colors.white30,
+                    valueColor: const AlwaysStoppedAnimation(
+                      Color(0xFF1E293B),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFD93D),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      "${(progress * 100).toInt()}%",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+
+                const Text(
+                  "KHÁM PHÁ VÔ HẠN • SÁNG TẠO KHÔNG NGỪNG",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+
+                const SizedBox(height: 20),
               ],
             ),
           ),
