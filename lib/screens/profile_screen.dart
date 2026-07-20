@@ -2,7 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../constants/app_colors.dart';
 import '../services/auth_service.dart';
+import '../utils/app_responsive.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -12,392 +14,381 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  static const Color primaryBlue = Color(0xFF4A90E2);
-  static const Color darkBlue = Color(0xFF0B4DBA);
-  static const Color primaryYellow = Color(0xFFFFD93D);
-  static const Color bgColor = Color(0xFFF8FAFC);
-  static const Color textDark = Color(0xFF111827);
-  static const Color textGrey = Color(0xFF64748B);
-
-  String fullName = 'Khách hàng';
-  String email = '';
-  String role = 'customer';
-  bool isLoading = true;
+  String _fullName  = 'Khách hàng';
+  String _email     = '';
+  String _role      = 'customer';
+  bool   _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    loadUser();
+    _loadUser();
   }
 
-  Future<void> loadUser() async {
+  Future<void> _loadUser() async {
     final user = FirebaseAuth.instance.currentUser;
-
-    if (user == null) {
-      setState(() => isLoading = false);
-      return;
-    }
-
+    if (user == null) { setState(() => _isLoading = false); return; }
     final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .get();
-
+        .collection('users').doc(user.uid).get();
     if (!mounted) return;
-
     setState(() {
-      fullName = doc.data()?['fullName'] ?? user.displayName ?? 'Khách hàng';
-      email = user.email ?? '';
-      role = doc.data()?['role'] ?? 'customer';
-      isLoading = false;
+      _fullName = doc.data()?['fullName'] ?? user.displayName ?? 'Khách hàng';
+      _email    = user.email ?? '';
+      _role     = doc.data()?['role'] ?? 'customer';
+      _isLoading = false;
     });
   }
 
-  Future<void> logout() async {
+  Future<void> _logout() async {
     await AuthService().logout();
-
     if (!mounted) return;
-
-    Navigator.pushNamedAndRemoveUntil(
-      context,
-      '/login',
-          (route) => false,
-    );
+    Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
   }
 
-  Future<void> changePassword() async {
-    if (email.isEmpty) return;
-
-    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-
+  Future<void> _changePassword() async {
+    if (_email.isEmpty) return;
+    await FirebaseAuth.instance.sendPasswordResetEmail(email: _email);
     if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Link đổi mật khẩu đã được gửi vào email"),
-      ),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Link đổi mật khẩu đã được gửi vào email'),
+      backgroundColor: AppColors.success,
+    ));
   }
 
-  String getRoleText(String role) {
+  String _roleLabel(String role) {
     switch (role) {
-      case 'seller':
-        return 'Nhà bán hàng';
-      case 'admin':
-        return 'Quản trị viên';
-      case 'customer':
-        return 'Khách hàng';
-      default:
-        return role;
+      case 'seller': return 'Nhà bán hàng';
+      case 'admin':  return 'Quản trị viên';
+      default:       return 'Khách hàng';
     }
   }
 
-  Widget buildProfileHeader() {
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            darkBlue,
-            primaryBlue,
-          ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: darkBlue.withOpacity(0.18),
-            blurRadius: 28,
-            offset: const Offset(0, 14),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 96,
-            height: 96,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.18),
-              borderRadius: BorderRadius.circular(32),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.35),
-                width: 1.5,
-              ),
-            ),
-            child: const Icon(
-              Icons.person_rounded,
-              size: 58,
-              color: primaryYellow,
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          Text(
-            fullName,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-
-          const SizedBox(height: 6),
-
-          Text(
-            email,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 14.5,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-
-          const SizedBox(height: 14),
-
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 7,
-            ),
-            decoration: BoxDecoration(
-              color: primaryYellow,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              getRoleText(role),
-              style: const TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.w900,
-                fontSize: 12.5,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  Color _roleColor(String role) {
+    switch (role) {
+      case 'seller': return AppColors.secondary;
+      case 'admin':  return AppColors.accentRed;
+      default:       return AppColors.primary;
+    }
   }
 
-  Widget buildMenuSection({
-    required String title,
-    required List<Widget> children,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            color: textDark,
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        const SizedBox(height: 12),
-        ...children,
-      ],
-    );
-  }
-
-  Widget menuItem({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-    Color color = darkBlue,
-    String? subtitle,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 8,
-        ),
-        leading: Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 24,
-          ),
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            color: textDark,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        subtitle: subtitle == null
-            ? null
-            : Text(
-          subtitle,
-          style: const TextStyle(
-            color: textGrey,
-            fontSize: 12.5,
-          ),
-        ),
-        trailing: const Icon(
-          Icons.chevron_right_rounded,
-          color: textGrey,
-        ),
-        onTap: onTap,
-      ),
-    );
-  }
-
-  Widget buildLoading() {
-    return const Center(
-      child: CircularProgressIndicator(color: darkBlue),
-    );
+  String _initials(String name) {
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+    }
+    return name.isNotEmpty ? name[0].toUpperCase() : '?';
   }
 
   @override
   Widget build(BuildContext context) {
+    final r = AppResponsive(context);
+
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
-          "Cá nhân",
-          style: TextStyle(
-            color: textDark,
-            fontWeight: FontWeight.w800,
+        title: const Text('Cá nhân'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.settings_outlined, size: r.icon(22)),
+            color: AppColors.textGrey,
+            onPressed: () {},
           ),
-        ),
-        backgroundColor: bgColor,
-        foregroundColor: textDark,
-        elevation: 0,
-        centerTitle: false,
+        ],
       ),
-      body: isLoading
-          ? buildLoading()
+      body: _isLoading
+          ? const Center(
+          child: CircularProgressIndicator(color: AppColors.primary))
           : RefreshIndicator(
-        color: darkBlue,
-        onRefresh: loadUser,
+        color: AppColors.primary,
+        onRefresh: _loadUser,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+          padding: r.fromLTRB(20, 8, 20, 32),
           children: [
-            buildProfileHeader(),
+            _buildHeader(r),
+            SizedBox(height: r.h(24)),
 
-            const SizedBox(height: 26),
-
-            buildMenuSection(
-              title: "Tài khoản",
-              children: [
-                menuItem(
-                  icon: Icons.edit_outlined,
-                  title: "Chỉnh sửa hồ sơ",
-                  subtitle: "Cập nhật tên và thông tin cá nhân",
-                  onTap: () async {
-                    final updated = await Navigator.pushNamed(
-                      context,
-                      '/edit-profile',
-                    );
-
-                    if (updated == true) {
-                      loadUser();
-                    }
-                  },
-                ),
-                menuItem(
-                  icon: Icons.lock_outline_rounded,
-                  title: "Đổi mật khẩu",
-                  subtitle: "Gửi link đổi mật khẩu qua email",
-                  onTap: changePassword,
-                ),
-                menuItem(
-                  icon: Icons.location_on_outlined,
-                  title: "Địa chỉ của tôi",
-                  subtitle: "Quản lý địa chỉ nhận hàng",
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Sẽ làm màn My Addresses sau"),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 14),
-
-            buildMenuSection(
-              title: "Mua hàng",
-              children: [
-                menuItem(
-                  icon: Icons.receipt_long_rounded,
-                  title: "Đơn hàng của tôi",
-                  subtitle: "Theo dõi trạng thái đơn hàng",
-                  onTap: () {
-                    Navigator.pushNamed(context, '/orders');
-                  },
-                ),
-              ],
-            ),
-
-            if (role == 'seller') ...[
-              const SizedBox(height: 14),
-              buildMenuSection(
-                title: "Nhà bán hàng",
-                children: [
-                  menuItem(
-                    icon: Icons.storefront_rounded,
-                    title: "Quản lý đơn hàng",
-                    subtitle: "Xác nhận và theo dõi đơn hàng",
-                    onTap: () {
-                      Navigator.pushNamed(context, '/seller-orders');
-                    },
-                  ),
-                  menuItem(
-                    icon: Icons.inventory_2_outlined,
-                    title: "Quản lý sản phẩm",
-                    subtitle: "Thêm, sửa và kiểm tra kho sản phẩm",
-                    onTap: () {
-                      Navigator.pushNamed(context, '/seller-products');
-                    },
-                  ),
-                ],
+            _buildSection(r, 'Tài khoản', [
+              _menuItem(r,
+                icon: Icons.edit_outlined,
+                iconBg: AppColors.primary,
+                title: 'Chỉnh sửa hồ sơ',
+                subtitle: 'Cập nhật tên và thông tin cá nhân',
+                onTap: () async {
+                  final updated = await Navigator.pushNamed(
+                      context, '/edit-profile');
+                  if (updated == true) _loadUser();
+                },
               ),
+              _menuItem(r,
+                icon: Icons.lock_outline_rounded,
+                iconBg: const Color(0xFF8B5CF6),
+                title: 'Đổi mật khẩu',
+                subtitle: 'Gửi link đổi mật khẩu qua email',
+                onTap: _changePassword,
+              ),
+              _menuItem(r,
+                icon: Icons.location_on_outlined,
+                iconBg: AppColors.success,
+                title: 'Địa chỉ của tôi',
+                subtitle: 'Quản lý địa chỉ nhận hàng',
+                onTap: () =>
+                    Navigator.pushNamed(context, '/my-addresses'),
+              ),
+            ]),
+
+            SizedBox(height: r.h(16)),
+            _buildSection(r, 'Mua hàng', [
+              _menuItem(r,
+                icon: Icons.receipt_long_rounded,
+                iconBg: AppColors.secondary,
+                title: 'Đơn hàng của tôi',
+                subtitle: 'Theo dõi trạng thái đơn hàng',
+                onTap: () => Navigator.pushNamed(context, '/orders'),
+              ),
+            ]),
+
+            if (_role == 'seller') ...[
+              SizedBox(height: r.h(16)),
+              _buildSection(r, 'Nhà bán hàng', [
+                _menuItem(r,
+                  icon: Icons.storefront_rounded,
+                  iconBg: const Color(0xFFFB7185),
+                  title: 'Quản lý đơn hàng',
+                  subtitle: 'Xác nhận và theo dõi đơn hàng',
+                  onTap: () =>
+                      Navigator.pushNamed(context, '/seller-orders'),
+                ),
+                _menuItem(r,
+                  icon: Icons.inventory_2_outlined,
+                  iconBg: AppColors.primary,
+                  title: 'Quản lý sản phẩm',
+                  subtitle: 'Thêm, sửa và kiểm tra kho',
+                  onTap: () =>
+                      Navigator.pushNamed(context, '/seller-products'),
+                ),
+              ]),
             ],
 
-            const SizedBox(height: 14),
-
-            buildMenuSection(
-              title: "Hệ thống",
-              children: [
-                menuItem(
-                  icon: Icons.logout_rounded,
-                  title: "Đăng xuất",
-                  subtitle: "Thoát khỏi tài khoản hiện tại",
-                  color: Colors.red,
-                  onTap: logout,
+            SizedBox(height: r.h(16)),
+            // Logout
+            GestureDetector(
+              onTap: _logout,
+              child: Container(
+                padding: r.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius:
+                  BorderRadius.circular(AppColors.radiusXl),
+                  border: Border.all(
+                      color: AppColors.accentRed
+                          .withValues(alpha: 0.2)),
+                  boxShadow: AppColors.softShadow(),
                 ),
-              ],
+                child: Row(children: [
+                  Container(
+                    width: r.w(40), height: r.w(40),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentRed
+                          .withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(
+                          AppColors.radiusMd),
+                    ),
+                    child: Icon(Icons.logout_rounded,
+                        color: AppColors.accentRed,
+                        size: r.icon(20)),
+                  ),
+                  SizedBox(width: r.w(14)),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Đăng xuất',
+                            style: TextStyle(
+                                color: AppColors.accentRed,
+                                fontWeight: FontWeight.w800,
+                                fontSize: r.sp(15))),
+                        Text('Thoát khỏi tài khoản hiện tại',
+                            style: TextStyle(
+                                color: AppColors.textGrey,
+                                fontSize: r.sp(12))),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right_rounded,
+                      color: AppColors.accentRed,
+                      size: r.icon(20)),
+                ]),
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(AppResponsive r) {
+    final roleColor = _roleColor(_role);
+    return Container(
+      padding: r.all(20),
+      decoration: BoxDecoration(
+        gradient: AppColors.primaryGradient,
+        borderRadius: BorderRadius.circular(AppColors.radiusXxl),
+        boxShadow: AppColors.coloredShadow(AppColors.primary),
+      ),
+      child: Row(children: [
+        // Avatar
+        Container(
+          width: r.w(72), height: r.w(72),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(AppColors.radiusLg),
+            border: Border.all(
+                color: Colors.white.withValues(alpha: 0.35), width: 2),
+          ),
+          child: Center(
+            child: Text(_initials(_fullName),
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: r.sp(24),
+                    fontWeight: FontWeight.w900)),
+          ),
+        ),
+        SizedBox(width: r.w(16)),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(_fullName,
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: r.sp(18),
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.3)),
+              SizedBox(height: r.h(4)),
+              Text(_email,
+                  style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.75),
+                      fontSize: r.sp(12),
+                      fontWeight: FontWeight.w400),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
+              SizedBox(height: r.h(10)),
+              Container(
+                padding: r.sym(10, 4),
+                decoration: BoxDecoration(
+                  color: roleColor,
+                  borderRadius: BorderRadius.circular(r.r(20)),
+                ),
+                child: Text(_roleLabel(_role),
+                    style: TextStyle(
+                        color: AppColors.textDark,
+                        fontWeight: FontWeight.w800,
+                        fontSize: r.sp(11))),
+              ),
+            ],
+          ),
+        ),
+        // Edit shortcut
+        GestureDetector(
+          onTap: () async {
+            final updated =
+            await Navigator.pushNamed(context, '/edit-profile');
+            if (updated == true) _loadUser();
+          },
+          child: Container(
+            width: r.w(36), height: r.w(36),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(AppColors.radiusSm),
+            ),
+            child: Icon(Icons.edit_outlined,
+                color: Colors.white, size: r.icon(18)),
+          ),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildSection(
+      AppResponsive r, String title, List<Widget> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: r.p(4), bottom: r.p(10)),
+          child: Text(title.toUpperCase(),
+              style: TextStyle(
+                  fontSize: r.sp(11),
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textLight,
+                  letterSpacing: 1.2)),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppColors.radiusXl),
+            border: Border.all(color: AppColors.border),
+            boxShadow: AppColors.softShadow(),
+          ),
+          child: Column(
+            children: items.asMap().entries.map((e) {
+              final isLast = e.key == items.length - 1;
+              return Column(children: [
+                e.value,
+                if (!isLast)
+                  const Divider(height: 1, indent: 20, endIndent: 20),
+              ]);
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _menuItem(
+      AppResponsive r, {
+        required IconData icon,
+        required Color iconBg,
+        required String title,
+        required String subtitle,
+        required VoidCallback onTap,
+      }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppColors.radiusXl),
+      child: Padding(
+        padding: r.sym(16, 12),
+        child: Row(children: [
+          Container(
+            width: r.w(40), height: r.w(40),
+            decoration: BoxDecoration(
+              color: iconBg.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppColors.radiusMd),
+            ),
+            child:
+            Icon(icon, color: iconBg, size: r.icon(20)),
+          ),
+          SizedBox(width: r.w(14)),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: TextStyle(
+                        color: AppColors.textDark,
+                        fontWeight: FontWeight.w700,
+                        fontSize: r.sp(14))),
+                SizedBox(height: r.h(2)),
+                Text(subtitle,
+                    style: TextStyle(
+                        color: AppColors.textGrey,
+                        fontSize: r.sp(12))),
+              ],
+            ),
+          ),
+          Icon(Icons.chevron_right_rounded,
+              color: AppColors.textLight, size: r.icon(20)),
+        ]),
       ),
     );
   }

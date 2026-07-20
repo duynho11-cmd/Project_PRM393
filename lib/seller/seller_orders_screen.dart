@@ -1,17 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+import '../constants/app_colors.dart';
 import 'seller_order_detail_screen.dart';
 
 class SellerOrdersScreen extends StatelessWidget {
   const SellerOrdersScreen({super.key});
-
-  static const Color primaryBlue = Color(0xFF4A90E2);
-  static const Color darkBlue = Color(0xFF0B4DBA);
-  static const Color primaryYellow = Color(0xFFFFD93D);
-  static const Color bgColor = Color(0xFFF8FAFC);
-  static const Color textDark = Color(0xFF111827);
-  static const Color textGrey = Color(0xFF64748B);
 
   String formatPrice(int price) {
     return '${price.toString().replaceAllMapped(
@@ -46,17 +40,17 @@ class SellerOrdersScreen extends StatelessWidget {
   Color statusColor(String status) {
     switch (status) {
       case 'Pending':
-        return Colors.orange;
+        return const Color(0xFFF59E0B);
       case 'Processing':
-        return primaryBlue;
+        return AppColors.primary;
       case 'Shipping':
         return const Color(0xFF8B5CF6);
       case 'Delivered':
-        return const Color(0xFF22C55E);
+        return AppColors.success;
       case 'Cancelled':
-        return Colors.red;
+        return AppColors.accentRed;
       default:
-        return textGrey;
+        return AppColors.textGrey;
     }
   }
 
@@ -88,17 +82,15 @@ class SellerOrdersScreen extends StatelessWidget {
 
   Widget buildHeader(int count) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(18, 6, 18, 18),
-      padding: const EdgeInsets.all(22),
+      margin: const EdgeInsets.fromLTRB(20, 6, 20, 18),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            darkBlue,
-            primaryBlue,
-          ],
+        borderRadius: BorderRadius.circular(28),
+        gradient: AppColors.primaryGradient,
+        boxShadow: AppColors.premiumShadow(
+          color: AppColors.primary.withOpacity(0.2),
+          blur: 24,
+          offset: const Offset(0, 10),
         ),
       ),
       child: Row(
@@ -108,23 +100,24 @@ class SellerOrdersScreen extends StatelessWidget {
               "Quản lý\n$count đơn hàng",
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 22,
+                fontSize: 20,
                 fontWeight: FontWeight.w900,
-                height: 1.25,
+                height: 1.3,
+                letterSpacing: -0.5,
               ),
             ),
           ),
           Container(
-            width: 66,
-            height: 66,
+            width: 60,
+            height: 60,
             decoration: BoxDecoration(
-              color: Colors.white24,
-              borderRadius: BorderRadius.circular(24),
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(20),
             ),
             child: const Icon(
               Icons.storefront_rounded,
-              color: primaryYellow,
-              size: 40,
+              color: AppColors.secondary,
+              size: 32,
             ),
           ),
         ],
@@ -141,8 +134,8 @@ class SellerOrdersScreen extends StatelessWidget {
         vertical: 6,
       ),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(999),
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -150,15 +143,15 @@ class SellerOrdersScreen extends StatelessWidget {
           Icon(
             statusIcon(status),
             color: color,
-            size: 15,
+            size: 14,
           ),
-          const SizedBox(width: 5),
+          const SizedBox(width: 6),
           Text(
             statusText(status),
             style: TextStyle(
               color: color,
               fontWeight: FontWeight.w900,
-              fontSize: 12.5,
+              fontSize: 12,
             ),
           ),
         ],
@@ -167,13 +160,36 @@ class SellerOrdersScreen extends StatelessWidget {
   }
 
   Widget buildEmpty() {
-    return const Center(
-      child: Text(
-        'Chưa có đơn hàng nào',
-        style: TextStyle(
-          color: textGrey,
-          fontWeight: FontWeight.w700,
-          fontSize: 16,
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 86,
+              height: 86,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: const Icon(
+                Icons.inventory_2_outlined,
+                color: AppColors.primary,
+                size: 42,
+              ),
+            ),
+            const SizedBox(height: 18),
+            const Text(
+              'Chưa có đơn hàng nào',
+              style: TextStyle(
+                color: AppColors.textDark,
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -212,30 +228,24 @@ class SellerOrdersScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(26),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
-            ),
-          ],
+          border: Border.all(color: AppColors.border),
+          boxShadow: AppColors.premiumShadow(),
         ),
         child: Column(
           children: [
             Row(
               children: [
                 Container(
-                  width: 54,
-                  height: 54,
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
-                    color: primaryBlue.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(18),
+                    color: AppColors.primary.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(
                     Icons.receipt_long_rounded,
-                    color: darkBlue,
-                    size: 29,
+                    color: AppColors.primary,
+                    size: 24,
                   ),
                 ),
 
@@ -248,18 +258,18 @@ class SellerOrdersScreen extends StatelessWidget {
                       Text(
                         "Đơn hàng #${shortId(orderId)}",
                         style: const TextStyle(
-                          color: textDark,
+                          color: AppColors.textDark,
                           fontWeight: FontWeight.w900,
-                          fontSize: 16,
+                          fontSize: 15,
                         ),
                       ),
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 4),
                       Text(
                         "$count sản phẩm • $paymentMethod",
                         style: const TextStyle(
-                          color: textGrey,
+                          color: AppColors.textGrey,
                           fontWeight: FontWeight.w600,
-                          fontSize: 13,
+                          fontSize: 12.5,
                         ),
                       ),
                     ],
@@ -268,8 +278,8 @@ class SellerOrdersScreen extends StatelessWidget {
 
                 const Icon(
                   Icons.arrow_forward_ios_rounded,
-                  color: textGrey,
-                  size: 16,
+                  color: AppColors.textLight,
+                  size: 14,
                 ),
               ],
             ),
@@ -280,7 +290,7 @@ class SellerOrdersScreen extends StatelessWidget {
               children: [
                 const Icon(
                   Icons.person_outline_rounded,
-                  color: textGrey,
+                  color: AppColors.textGrey,
                   size: 18,
                 ),
                 const SizedBox(width: 6),
@@ -290,7 +300,7 @@ class SellerOrdersScreen extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: textDark,
+                      color: AppColors.textDark,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -304,7 +314,7 @@ class SellerOrdersScreen extends StatelessWidget {
               children: [
                 const Icon(
                   Icons.phone_outlined,
-                  color: textGrey,
+                  color: AppColors.textGrey,
                   size: 18,
                 ),
                 const SizedBox(width: 6),
@@ -312,7 +322,7 @@ class SellerOrdersScreen extends StatelessWidget {
                   child: Text(
                     phone,
                     style: const TextStyle(
-                      color: textGrey,
+                      color: AppColors.textGrey,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -329,9 +339,9 @@ class SellerOrdersScreen extends StatelessWidget {
                 Text(
                   formatPrice(total),
                   style: const TextStyle(
-                    color: darkBlue,
+                    color: AppColors.primary,
                     fontWeight: FontWeight.w900,
-                    fontSize: 20,
+                    fontSize: 18,
                   ),
                 ),
               ],
@@ -344,7 +354,7 @@ class SellerOrdersScreen extends StatelessWidget {
 
   Widget buildLoading() {
     return const Center(
-      child: CircularProgressIndicator(color: darkBlue),
+      child: CircularProgressIndicator(color: AppColors.primary),
     );
   }
 
@@ -356,7 +366,7 @@ class SellerOrdersScreen extends StatelessWidget {
           'Lỗi: $error',
           textAlign: TextAlign.center,
           style: const TextStyle(
-            color: Colors.red,
+            color: AppColors.accentRed,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -367,17 +377,19 @@ class SellerOrdersScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
           'Quản lý đơn hàng',
           style: TextStyle(
-            color: textDark,
-            fontWeight: FontWeight.w800,
+            color: AppColors.textDark,
+            fontWeight: FontWeight.w900,
+            fontSize: 20,
+            letterSpacing: -0.5,
           ),
         ),
-        backgroundColor: bgColor,
-        foregroundColor: textDark,
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.textDark,
         elevation: 0,
         centerTitle: false,
       ),
@@ -411,7 +423,7 @@ class SellerOrdersScreen extends StatelessWidget {
               }
 
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: buildOrderCard(
                   context: context,
                   doc: docs[index - 1],

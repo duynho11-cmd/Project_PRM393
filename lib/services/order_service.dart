@@ -64,11 +64,21 @@ class OrderService {
         .where('userId', isEqualTo: user.uid)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
+      final orders = snapshot.docs.map((doc) {
         final data = doc.data();
         data['id'] = doc.id;
         return data;
       }).toList();
+
+      orders.sort((a, b) {
+        final aCreatedAt = a['createdAt'] as Timestamp?;
+        final bCreatedAt = b['createdAt'] as Timestamp?;
+        return (bCreatedAt?.millisecondsSinceEpoch ?? 0).compareTo(
+          aCreatedAt?.millisecondsSinceEpoch ?? 0,
+        );
+      });
+
+      return orders;
     });
   }
 }

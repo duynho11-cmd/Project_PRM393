@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+import '../constants/app_colors.dart';
+
 class SellerOrderDetailScreen extends StatefulWidget {
   final String orderId;
   final Map<String, dynamic> order;
@@ -17,13 +19,6 @@ class SellerOrderDetailScreen extends StatefulWidget {
 }
 
 class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
-  static const Color primaryBlue = Color(0xFF4A90E2);
-  static const Color darkBlue = Color(0xFF0B4DBA);
-  static const Color primaryYellow = Color(0xFFFFD93D);
-  static const Color bgColor = Color(0xFFF8FAFC);
-  static const Color textDark = Color(0xFF111827);
-  static const Color textGrey = Color(0xFF64748B);
-
   late String status;
   bool isLoading = false;
 
@@ -60,17 +55,17 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
   Color statusColor(String status) {
     switch (status) {
       case 'Pending':
-        return Colors.orange;
+        return const Color(0xFFF59E0B);
       case 'Processing':
-        return primaryBlue;
+        return AppColors.primary;
       case 'Shipping':
         return const Color(0xFF8B5CF6);
       case 'Delivered':
-        return const Color(0xFF22C55E);
+        return AppColors.success;
       case 'Cancelled':
-        return Colors.red;
+        return AppColors.accentRed;
       default:
-        return textGrey;
+        return AppColors.textGrey;
     }
   }
 
@@ -110,13 +105,19 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Đã cập nhật: ${statusText(newStatus)}')),
+        SnackBar(
+          content: Text('Đã cập nhật: ${statusText(newStatus)}'),
+          backgroundColor: AppColors.success,
+        ),
       );
     } catch (e) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi cập nhật: $e')),
+        SnackBar(
+          content: Text('Lỗi cập nhật: $e'),
+          backgroundColor: AppColors.accentRed,
+        ),
       );
     } finally {
       if (mounted) {
@@ -134,33 +135,23 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppColors.premiumShadow(),
       ),
       child: child,
     );
   }
 
   Widget buildHeader() {
-    final color = statusColor(status);
-
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            darkBlue,
-            primaryBlue,
-          ],
+        borderRadius: BorderRadius.circular(28),
+        gradient: AppColors.primaryGradient,
+        boxShadow: AppColors.premiumShadow(
+          color: AppColors.primary.withOpacity(0.2),
+          blur: 24,
+          offset: const Offset(0, 10),
         ),
       ),
       child: Row(
@@ -170,23 +161,24 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
               "Đơn hàng\n#${(widget.order['orderId'] ?? widget.orderId).toString().substring(0, 8)}",
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 22,
+                fontSize: 20,
                 fontWeight: FontWeight.w900,
-                height: 1.25,
+                height: 1.3,
+                letterSpacing: -0.5,
               ),
             ),
           ),
           Container(
-            width: 66,
-            height: 66,
+            width: 60,
+            height: 60,
             decoration: BoxDecoration(
-              color: Colors.white24,
-              borderRadius: BorderRadius.circular(24),
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(20),
             ),
             child: const Icon(
               Icons.manage_accounts_rounded,
-              color: primaryYellow,
-              size: 40,
+              color: AppColors.secondary,
+              size: 32,
             ),
           ),
         ],
@@ -204,13 +196,13 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
+              color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(18),
             ),
             child: Icon(
               statusIcon(status),
               color: color,
-              size: 31,
+              size: 28,
             ),
           ),
           const SizedBox(width: 14),
@@ -221,7 +213,7 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
                 const Text(
                   "Trạng thái hiện tại",
                   style: TextStyle(
-                    color: textGrey,
+                    color: AppColors.textGrey,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                   ),
@@ -231,7 +223,7 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
                   statusText(status),
                   style: TextStyle(
                     color: color,
-                    fontSize: 19,
+                    fontSize: 18,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -243,7 +235,7 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
               width: 22,
               height: 22,
               child: CircularProgressIndicator(
-                color: darkBlue,
+                color: AppColors.primary,
                 strokeWidth: 2.4,
               ),
             ),
@@ -262,13 +254,13 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: textGrey, size: 20),
+          Icon(icon, color: AppColors.textGrey, size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: RichText(
               text: TextSpan(
                 style: const TextStyle(
-                  color: textDark,
+                  color: AppColors.textDark,
                   fontSize: 14.5,
                   height: 1.4,
                 ),
@@ -276,14 +268,14 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
                   TextSpan(
                     text: '$label: ',
                     style: const TextStyle(
-                      color: textGrey,
+                      color: AppColors.textGrey,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   TextSpan(
                     text: value,
                     style: const TextStyle(
-                      color: textDark,
+                      color: AppColors.textDark,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -320,7 +312,7 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
                 color: const Color(0xFFF1F5F9),
                 child: const Icon(
                   Icons.image_not_supported_outlined,
-                  color: textGrey,
+                  color: AppColors.textGrey,
                 ),
               ),
             ),
@@ -335,9 +327,10 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: textDark,
+                    color: AppColors.textDark,
                     fontWeight: FontWeight.w800,
                     height: 1.25,
+                    fontSize: 14.5,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -349,13 +342,13 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: primaryBlue.withOpacity(0.08),
+                        color: AppColors.primary.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         'x$quantity',
                         style: const TextStyle(
-                          color: darkBlue,
+                          color: AppColors.primary,
                           fontWeight: FontWeight.w800,
                           fontSize: 12,
                         ),
@@ -365,7 +358,7 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
                     Text(
                       formatPrice(price),
                       style: const TextStyle(
-                        color: textGrey,
+                        color: AppColors.textGrey,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -379,7 +372,7 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
           Text(
             formatPrice(itemTotal),
             style: const TextStyle(
-              color: darkBlue,
+              color: AppColors.primary,
               fontWeight: FontWeight.w900,
               fontSize: 14.5,
             ),
@@ -401,7 +394,7 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
           Text(
             title,
             style: TextStyle(
-              color: bold ? textDark : textGrey,
+              color: bold ? AppColors.textDark : AppColors.textGrey,
               fontSize: bold ? 16 : 14.5,
               fontWeight: bold ? FontWeight.w900 : FontWeight.w600,
             ),
@@ -410,8 +403,8 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
           Text(
             formatPrice(value),
             style: TextStyle(
-              color: bold ? darkBlue : textDark,
-              fontSize: bold ? 23 : 15,
+              color: bold ? AppColors.primary : AppColors.textDark,
+              fontSize: bold ? 22 : 15,
               fontWeight: bold ? FontWeight.w900 : FontWeight.w700,
             ),
           ),
@@ -430,18 +423,19 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
           width: 38,
           height: 38,
           decoration: BoxDecoration(
-            color: primaryBlue.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(14),
+            color: AppColors.primary.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: darkBlue, size: 21),
+          child: Icon(icon, color: AppColors.primary, size: 20),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 12),
         Text(
           title,
           style: const TextStyle(
-            color: textDark,
-            fontSize: 20,
+            color: AppColors.textDark,
+            fontSize: 18,
             fontWeight: FontWeight.w900,
+            letterSpacing: -0.5,
           ),
         ),
       ],
@@ -459,12 +453,13 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
       height: 54,
       child: ElevatedButton.icon(
         onPressed: isLoading ? null : () => updateStatus(newStatus),
-        icon: Icon(icon),
+        icon: Icon(icon, color: Colors.white),
         label: Text(
           text,
           style: const TextStyle(
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w800,
             fontSize: 15.5,
+            color: Colors.white,
           ),
         ),
         style: ElevatedButton.styleFrom(
@@ -486,14 +481,14 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
         actionButton(
           text: 'Xác nhận đơn hàng',
           newStatus: 'Processing',
-          color: primaryBlue,
+          color: AppColors.primary,
           icon: Icons.task_alt_rounded,
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         actionButton(
           text: 'Hủy đơn hàng',
           newStatus: 'Cancelled',
-          color: Colors.red,
+          color: AppColors.accentRed,
           icon: Icons.cancel_outlined,
         ),
       ];
@@ -515,7 +510,7 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
         actionButton(
           text: 'Xác nhận giao thành công',
           newStatus: 'Delivered',
-          color: const Color(0xFF22C55E),
+          color: AppColors.success,
           icon: Icons.check_circle_outline_rounded,
         ),
       ];
@@ -529,14 +524,14 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
               statusIcon(status),
               color: statusColor(status),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 status == 'Delivered'
                     ? 'Đơn hàng đã hoàn tất'
                     : 'Đơn hàng đã kết thúc',
                 style: const TextStyle(
-                  color: textDark,
+                  color: AppColors.textDark,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -556,30 +551,32 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
     final shippingFee = (order['shippingFee'] as num?)?.toInt() ?? 0;
 
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
           'Chi tiết đơn hàng',
           style: TextStyle(
-            color: textDark,
-            fontWeight: FontWeight.w800,
+            color: AppColors.textDark,
+            fontWeight: FontWeight.w900,
+            fontSize: 20,
+            letterSpacing: -0.5,
           ),
         ),
-        backgroundColor: bgColor,
-        foregroundColor: textDark,
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.textDark,
         elevation: 0,
         centerTitle: false,
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
           buildHeader(),
 
-          const SizedBox(height: 18),
+          const SizedBox(height: 20),
 
           buildStatusCard(),
 
-          const SizedBox(height: 18),
+          const SizedBox(height: 20),
 
           buildCard(
             child: Column(
@@ -613,7 +610,7 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
             ),
           ),
 
-          const SizedBox(height: 22),
+          const SizedBox(height: 24),
 
           buildSectionTitle(
             title: 'Sản phẩm',
@@ -642,7 +639,7 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
                   title: 'Phí vận chuyển',
                   value: shippingFee,
                 ),
-                const Divider(height: 24),
+                const Divider(height: 24, color: AppColors.border),
                 buildSummaryRow(
                   title: 'Tổng cộng',
                   value: total,
@@ -652,7 +649,7 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
             ),
           ),
 
-          const SizedBox(height: 22),
+          const SizedBox(height: 24),
 
           buildSectionTitle(
             title: 'Cập nhật đơn hàng',

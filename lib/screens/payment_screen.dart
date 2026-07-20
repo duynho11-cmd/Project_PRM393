@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/order_service.dart';
+import '../constants/app_colors.dart';
 
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({super.key});
@@ -9,13 +10,6 @@ class PaymentScreen extends StatefulWidget {
 }
 
 class _PaymentScreenState extends State<PaymentScreen> {
-  static const Color primaryBlue = Color(0xFF4A90E2);
-  static const Color darkBlue = Color(0xFF0B4DBA);
-  static const Color primaryYellow = Color(0xFFFFD93D);
-  static const Color bgColor = Color(0xFFF8FAFC);
-  static const Color textDark = Color(0xFF111827);
-  static const Color textGrey = Color(0xFF64748B);
-
   String paymentMethod = 'COD';
   bool isLoading = false;
 
@@ -56,7 +50,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
+        SnackBar(
+          content: Text(error),
+          backgroundColor: AppColors.accentRed,
+        ),
       );
     }
   }
@@ -96,18 +93,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: selected ? darkBlue : const Color(0xFFE5E7EB),
+            color: selected ? AppColors.primary : AppColors.border,
             width: selected ? 1.8 : 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: selected
-                  ? darkBlue.withOpacity(0.12)
-                  : Colors.black.withOpacity(0.04),
-              blurRadius: selected ? 22 : 14,
-              offset: const Offset(0, 8),
-            ),
-          ],
+          boxShadow: selected
+              ? AppColors.premiumShadow(color: AppColors.primary.withOpacity(0.12))
+              : AppColors.premiumShadow(),
         ),
         child: Row(
           children: [
@@ -134,7 +125,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   Text(
                     title,
                     style: const TextStyle(
-                      color: textDark,
+                      color: AppColors.textDark,
                       fontSize: 15.5,
                       fontWeight: FontWeight.w900,
                     ),
@@ -143,7 +134,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   Text(
                     description,
                     style: const TextStyle(
-                      color: textGrey,
+                      color: AppColors.textGrey,
                       fontSize: 12.5,
                       fontWeight: FontWeight.w500,
                     ),
@@ -157,10 +148,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
               width: 26,
               height: 26,
               decoration: BoxDecoration(
-                color: selected ? darkBlue : Colors.transparent,
+                color: selected ? AppColors.primary : Colors.transparent,
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
-                  color: selected ? darkBlue : const Color(0xFFCBD5E1),
+                  color: selected ? AppColors.primary : const Color(0xFFCBD5E1),
                   width: 2,
                 ),
               ),
@@ -190,7 +181,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           Text(
             label,
             style: TextStyle(
-              color: isTotal ? textDark : textGrey,
+              color: isTotal ? AppColors.textDark : AppColors.textGrey,
               fontSize: isTotal ? 16 : 14.5,
               fontWeight: isTotal ? FontWeight.w900 : FontWeight.w600,
             ),
@@ -199,7 +190,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           Text(
             value,
             style: TextStyle(
-              color: isTotal ? darkBlue : textDark,
+              color: isTotal ? AppColors.primary : AppColors.textDark,
               fontSize: isTotal ? 24 : 15,
               fontWeight: isTotal ? FontWeight.w900 : FontWeight.w700,
             ),
@@ -215,14 +206,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppColors.premiumShadow(),
       ),
       child: Column(
         children: [
@@ -232,12 +217,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: primaryBlue.withOpacity(0.1),
+                  color: AppColors.primary.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(15),
                 ),
                 child: const Icon(
                   Icons.location_on_outlined,
-                  color: darkBlue,
+                  color: AppColors.primary,
                 ),
               ),
               const SizedBox(width: 12),
@@ -245,7 +230,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 child: Text(
                   'Thông tin nhận hàng',
                   style: TextStyle(
-                    color: textDark,
+                    color: AppColors.textDark,
                     fontSize: 17,
                     fontWeight: FontWeight.w900,
                   ),
@@ -259,7 +244,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             child: Text(
               data['fullName'] ?? '',
               style: const TextStyle(
-                color: textDark,
+                color: AppColors.textDark,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -270,7 +255,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             child: Text(
               data['phone'] ?? '',
               style: const TextStyle(
-                color: textGrey,
+                color: AppColors.textGrey,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -281,7 +266,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             child: Text(
               data['address'] ?? '',
               style: const TextStyle(
-                color: textGrey,
+                color: AppColors.textGrey,
                 height: 1.4,
               ),
             ),
@@ -293,7 +278,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   Widget buildBottomButton(Map<String, dynamic> data) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.vertical(
@@ -302,42 +287,52 @@ class _PaymentScreenState extends State<PaymentScreen> {
         boxShadow: [
           BoxShadow(
             blurRadius: 24,
-            color: Colors.black.withOpacity(0.08),
+            color: AppColors.textDark.withOpacity(0.06),
             offset: const Offset(0, -8),
           ),
         ],
       ),
       child: SafeArea(
         top: false,
-        child: SizedBox(
+        child: Container(
           width: double.infinity,
-          height: 58,
+          height: 56,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: AppColors.primaryGradient,
+            boxShadow: AppColors.premiumShadow(
+              color: AppColors.primary.withOpacity(0.25),
+              blur: 16,
+              offset: const Offset(0, 6),
+            ),
+          ),
           child: ElevatedButton.icon(
             onPressed: isLoading ? null : () => confirmPayment(data),
             icon: isLoading
                 ? const SizedBox()
-                : const Icon(Icons.check_circle_outline_rounded),
+                : const Icon(Icons.check_circle_outline_rounded, color: Colors.white),
             label: isLoading
                 ? const SizedBox(
-              width: 25,
-              height: 25,
+              width: 24,
+              height: 24,
               child: CircularProgressIndicator(
                 color: Colors.white,
-                strokeWidth: 2.6,
+                strokeWidth: 2.5,
               ),
             )
                 : const Text(
               "Xác nhận đặt hàng",
               style: TextStyle(
-                fontWeight: FontWeight.w900,
-                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: Colors.white,
               ),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: darkBlue,
+              backgroundColor: Colors.transparent,
               foregroundColor: Colors.white,
-              disabledBackgroundColor: darkBlue.withOpacity(0.65),
-              elevation: 0,
+              disabledBackgroundColor: Colors.transparent,
+              shadowColor: Colors.transparent,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -358,36 +353,36 @@ class _PaymentScreenState extends State<PaymentScreen> {
     final total = data['total'] as int;
 
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
           "Phương thức thanh toán",
           style: TextStyle(
-            color: textDark,
-            fontWeight: FontWeight.w800,
+            color: AppColors.textDark,
+            fontWeight: FontWeight.w900,
+            fontSize: 20,
+            letterSpacing: -0.5,
           ),
         ),
-        backgroundColor: bgColor,
-        foregroundColor: textDark,
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.textDark,
         elevation: 0,
         centerTitle: false,
       ),
       bottomNavigationBar: buildBottomButton(data),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
           children: [
             Container(
-              padding: const EdgeInsets.all(22),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    darkBlue,
-                    primaryBlue,
-                  ],
+                borderRadius: BorderRadius.circular(28),
+                gradient: AppColors.primaryGradient,
+                boxShadow: AppColors.premiumShadow(
+                  color: AppColors.primary.withOpacity(0.2),
+                  blur: 24,
+                  offset: const Offset(0, 10),
                 ),
               ),
               child: Row(
@@ -397,59 +392,61 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       "Chọn cách thanh toán\nphù hợp với bạn",
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 22,
+                        fontSize: 20,
                         fontWeight: FontWeight.w900,
-                        height: 1.25,
+                        height: 1.3,
+                        letterSpacing: -0.5,
                       ),
                     ),
                   ),
                   Container(
-                    width: 66,
-                    height: 66,
+                    width: 60,
+                    height: 60,
                     decoration: BoxDecoration(
-                      color: Colors.white24,
-                      borderRadius: BorderRadius.circular(24),
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Icon(
                       Icons.payments_rounded,
-                      color: primaryYellow,
-                      size: 40,
+                      color: AppColors.secondary,
+                      size: 32,
                     ),
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 22),
+            const SizedBox(height: 28),
 
             buildInfoCard(data),
 
-            const SizedBox(height: 22),
+            const SizedBox(height: 28),
 
             const Text(
               "Phương thức thanh toán",
               style: TextStyle(
-                color: textDark,
-                fontSize: 20,
+                color: AppColors.textDark,
+                fontSize: 18,
                 fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
               ),
             ),
 
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
 
             buildPaymentOption(
               value: 'COD',
               title: 'Thanh toán khi nhận hàng',
               description: 'Trả tiền mặt khi đơn hàng được giao tới bạn.',
               icon: Icons.local_shipping_outlined,
-              color: darkBlue,
+              color: AppColors.primary,
             ),
             buildPaymentOption(
               value: 'Banking',
               title: 'Chuyển khoản ngân hàng',
               description: 'Thanh toán qua tài khoản ngân hàng.',
               icon: Icons.account_balance_rounded,
-              color: const Color(0xFF22C55E),
+              color: AppColors.success,
             ),
             buildPaymentOption(
               value: 'Momo',
@@ -466,21 +463,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
               color: const Color(0xFF2563EB),
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
 
             Container(
-              padding: const EdgeInsets.all(18),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(26),
-                border: Border.all(color: const Color(0xFFE5E7EB)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 16,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
+                border: Border.all(color: AppColors.border),
+                boxShadow: AppColors.premiumShadow(),
               ),
               child: Column(
                 children: [
@@ -498,12 +489,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     value: formatPrice(total),
                     isTotal: true,
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       const Icon(
                         Icons.verified_user_outlined,
-                        color: Color(0xFF22C55E),
+                        color: AppColors.success,
                         size: 18,
                       ),
                       const SizedBox(width: 6),
@@ -511,7 +502,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         child: Text(
                           "Đơn hàng sẽ được tạo sau khi xác nhận.",
                           style: TextStyle(
-                            color: textGrey.withOpacity(0.95),
+                            color: AppColors.textGrey,
                             fontSize: 12.5,
                             fontWeight: FontWeight.w600,
                           ),

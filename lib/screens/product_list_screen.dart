@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/product_model.dart';
 import '../services/product_service.dart';
+import '../constants/app_colors.dart';
 import 'product_detail_screen.dart';
 
 class ProductListScreen extends StatelessWidget {
@@ -11,13 +12,6 @@ class ProductListScreen extends StatelessWidget {
     super.key,
     required this.categoryName,
   });
-
-  static const Color primaryBlue = Color(0xFF4A90E2);
-  static const Color darkBlue = Color(0xFF0B4DBA);
-  static const Color primaryYellow = Color(0xFFFFD93D);
-  static const Color bgColor = Color(0xFFF8FAFC);
-  static const Color textDark = Color(0xFF111827);
-  static const Color textGrey = Color(0xFF64748B);
 
   String viName(String name) {
     switch (name) {
@@ -61,14 +55,8 @@ class ProductListScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 18,
-              offset: const Offset(0, 10),
-            ),
-          ],
+          border: Border.all(color: AppColors.border),
+          boxShadow: AppColors.premiumShadow(),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,7 +78,7 @@ class ProductListScreen extends StatelessWidget {
                           color: const Color(0xFFF1F5F9),
                           child: const Icon(
                             Icons.image_not_supported_outlined,
-                            color: textGrey,
+                            color: AppColors.textLight,
                             size: 34,
                           ),
                         );
@@ -100,42 +88,53 @@ class ProductListScreen extends StatelessWidget {
 
                   if (hasDiscount)
                     Positioned(
-                      top: 10,
-                      left: 10,
+                      top: 12,
+                      left: 12,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 9,
-                          vertical: 5,
+                          horizontal: 10,
+                          vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: primaryYellow,
+                          color: AppColors.accentRed,
                           borderRadius: BorderRadius.circular(20),
+                          boxShadow: AppColors.premiumShadow(
+                            color: AppColors.accentRed.withOpacity(0.3),
+                            blur: 8,
+                            offset: const Offset(0, 4),
+                          ),
                         ),
                         child: const Text(
-                          'SALE',
+                          'GIẢM GIÁ',
                           style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
                           ),
                         ),
                       ),
                     ),
 
                   Positioned(
-                    top: 10,
-                    right: 10,
+                    top: 12,
+                    right: 12,
                     child: Container(
-                      width: 34,
-                      height: 34,
+                      width: 36,
+                      height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.92),
-                        borderRadius: BorderRadius.circular(14),
+                        color: Colors.white.withOpacity(0.9),
+                        shape: BoxShape.circle,
+                        boxShadow: AppColors.premiumShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blur: 8,
+                          offset: const Offset(0, 4),
+                        ),
                       ),
                       child: const Icon(
                         Icons.favorite_border_rounded,
-                        color: textGrey,
-                        size: 19,
+                        color: AppColors.textGrey,
+                        size: 18,
                       ),
                     ),
                   ),
@@ -144,31 +143,33 @@ class ProductListScreen extends StatelessWidget {
             ),
 
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 11, 12, 12),
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    viName(product.category),
+                    viName(product.category).toUpperCase(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: textGrey,
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
+                      color: AppColors.textLight,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1,
                     ),
                   ),
 
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 4),
 
                   Text(
                     product.name,
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: textDark,
+                      color: AppColors.textDark,
                       fontWeight: FontWeight.w800,
-                      height: 1.25,
+                      fontSize: 15,
+                      height: 1.2,
                     ),
                   ),
 
@@ -178,16 +179,16 @@ class ProductListScreen extends StatelessWidget {
                     children: [
                       const Icon(
                         Icons.star_rounded,
-                        color: primaryYellow,
-                        size: 17,
+                        color: AppColors.secondary,
+                        size: 16,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         product.rating.toString(),
                         style: const TextStyle(
                           fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: textDark,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textDark,
                         ),
                       ),
                       const Spacer(),
@@ -198,9 +199,9 @@ class ProductListScreen extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: product.stock > 0
-                              ? primaryBlue.withOpacity(0.08)
-                              : Colors.red.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(12),
+                              ? AppColors.primary.withOpacity(0.06)
+                              : AppColors.accentRed.withOpacity(0.06),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
                           product.stock > 0
@@ -208,36 +209,44 @@ class ProductListScreen extends StatelessWidget {
                               : 'Hết hàng',
                           style: TextStyle(
                             fontSize: 11,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w800,
                             color: product.stock > 0
-                                ? darkBlue
-                                : Colors.red,
+                                ? AppColors.primary
+                                : AppColors.accentRed,
                           ),
                         ),
                       ),
                     ],
                   ),
 
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
 
-                  Text(
-                    formatPrice(product.price),
-                    style: const TextStyle(
-                      color: darkBlue,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 16,
-                    ),
-                  ),
-
-                  if (hasDiscount)
-                    Text(
-                      formatPrice(product.oldPrice),
-                      style: const TextStyle(
-                        color: textGrey,
-                        decoration: TextDecoration.lineThrough,
-                        fontSize: 12,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        formatPrice(product.price),
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 17,
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 6),
+                      if (hasDiscount)
+                        Expanded(
+                          child: Text(
+                            formatPrice(product.oldPrice),
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppColors.textLight,
+                              decoration: TextDecoration.lineThrough,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -258,12 +267,12 @@ class ProductListScreen extends StatelessWidget {
               width: 86,
               height: 86,
               decoration: BoxDecoration(
-                color: primaryBlue.withOpacity(0.1),
+                color: AppColors.primary.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(30),
               ),
               child: const Icon(
                 Icons.inventory_2_outlined,
-                color: darkBlue,
+                color: AppColors.primary,
                 size: 42,
               ),
             ),
@@ -271,9 +280,10 @@ class ProductListScreen extends StatelessWidget {
             const Text(
               'Chưa có sản phẩm',
               style: TextStyle(
-                color: textDark,
+                color: AppColors.textDark,
                 fontSize: 20,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
               ),
             ),
             const SizedBox(height: 8),
@@ -281,7 +291,7 @@ class ProductListScreen extends StatelessWidget {
               'Danh mục này hiện chưa có sản phẩm nào.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: textGrey,
+                color: AppColors.textGrey,
                 fontSize: 15,
               ),
             ),
@@ -299,7 +309,7 @@ class ProductListScreen extends StatelessWidget {
           'Lỗi: $error',
           textAlign: TextAlign.center,
           style: const TextStyle(
-            color: Colors.red,
+            color: AppColors.accentRed,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -310,24 +320,15 @@ class ProductListScreen extends StatelessWidget {
   Widget buildHeader() {
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 8, 20, 18),
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            darkBlue,
-            primaryBlue,
-          ],
+        borderRadius: BorderRadius.circular(28),
+        gradient: AppColors.primaryGradient,
+        boxShadow: AppColors.premiumShadow(
+          color: AppColors.primary.withOpacity(0.2),
+          blur: 24,
+          offset: const Offset(0, 10),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: darkBlue.withOpacity(0.2),
-            blurRadius: 26,
-            offset: const Offset(0, 14),
-          ),
-        ],
       ),
       child: Row(
         children: [
@@ -338,7 +339,8 @@ class ProductListScreen extends StatelessWidget {
                 color: Colors.white,
                 fontSize: 24,
                 fontWeight: FontWeight.w900,
-                height: 1.25,
+                height: 1.3,
+                letterSpacing: -0.5,
               ),
             ),
           ),
@@ -346,13 +348,13 @@ class ProductListScreen extends StatelessWidget {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.18),
+              color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(22),
             ),
             child: const Icon(
               Icons.widgets_rounded,
-              color: primaryYellow,
-              size: 38,
+              color: AppColors.secondary,
+              size: 36,
             ),
           ),
         ],
@@ -365,17 +367,19 @@ class ProductListScreen extends StatelessWidget {
     final String displayTitle = viName(categoryName);
 
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
           displayTitle,
           style: const TextStyle(
-            color: textDark,
-            fontWeight: FontWeight.w800,
+            color: AppColors.textDark,
+            fontWeight: FontWeight.w900,
+            fontSize: 20,
+            letterSpacing: -0.5,
           ),
         ),
-        backgroundColor: bgColor,
-        foregroundColor: textDark,
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.textDark,
         elevation: 0,
         centerTitle: false,
       ),
@@ -385,7 +389,7 @@ class ProductListScreen extends StatelessWidget {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(
-                color: darkBlue,
+                color: AppColors.primary,
               ),
             );
           }
@@ -421,7 +425,7 @@ class ProductListScreen extends StatelessWidget {
                     crossAxisCount: 2,
                     mainAxisSpacing: 16,
                     crossAxisSpacing: 16,
-                    childAspectRatio: 0.62,
+                    childAspectRatio: 0.65,
                   ),
                 ),
               ),

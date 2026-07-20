@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+import '../constants/app_colors.dart';
+
 class SellerAddProductScreen extends StatefulWidget {
   const SellerAddProductScreen({super.key});
 
@@ -10,13 +12,6 @@ class SellerAddProductScreen extends StatefulWidget {
 }
 
 class _SellerAddProductScreenState extends State<SellerAddProductScreen> {
-  static const Color primaryBlue = Color(0xFF4A90E2);
-  static const Color darkBlue = Color(0xFF0B4DBA);
-  static const Color primaryYellow = Color(0xFFFFD93D);
-  static const Color bgColor = Color(0xFFF8FAFC);
-  static const Color textDark = Color(0xFF111827);
-  static const Color textGrey = Color(0xFF64748B);
-
   final nameController = TextEditingController();
   final priceController = TextEditingController();
   final oldPriceController = TextEditingController();
@@ -75,14 +70,20 @@ class _SellerAddProductScreenState extends State<SellerAddProductScreen> {
 
     if (name.isEmpty || priceText.isEmpty || stockText.isEmpty || image.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Vui lòng nhập đầy đủ thông tin")),
+        const SnackBar(
+          content: Text("Vui lòng nhập đầy đủ thông tin"),
+          backgroundColor: AppColors.accentRed,
+        ),
       );
       return;
     }
 
     if (!image.startsWith('http')) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Link hình ảnh phải bắt đầu bằng http hoặc https")),
+        const SnackBar(
+          content: Text("Link hình ảnh phải bắt đầu bằng http hoặc https"),
+          backgroundColor: AppColors.accentRed,
+        ),
       );
       return;
     }
@@ -93,21 +94,30 @@ class _SellerAddProductScreenState extends State<SellerAddProductScreen> {
 
     if (price <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Giá bán phải lớn hơn 0")),
+        const SnackBar(
+          content: Text("Giá bán phải lớn hơn 0"),
+          backgroundColor: AppColors.accentRed,
+        ),
       );
       return;
     }
 
     if (oldPrice > 0 && oldPrice < price) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Giá cũ phải lớn hơn hoặc bằng giá bán")),
+        const SnackBar(
+          content: Text("Giá cũ phải lớn hơn hoặc bằng giá bán"),
+          backgroundColor: AppColors.accentRed,
+        ),
       );
       return;
     }
 
     if (stock < 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Số lượng tồn kho không hợp lệ")),
+        const SnackBar(
+          content: Text("Số lượng tồn kho không hợp lệ"),
+          backgroundColor: AppColors.accentRed,
+        ),
       );
       return;
     }
@@ -131,7 +141,10 @@ class _SellerAddProductScreenState extends State<SellerAddProductScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Thêm sản phẩm thành công")),
+        const SnackBar(
+          content: Text("Thêm sản phẩm thành công"),
+          backgroundColor: AppColors.success,
+        ),
       );
 
       Navigator.pop(context);
@@ -139,7 +152,10 @@ class _SellerAddProductScreenState extends State<SellerAddProductScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Lỗi: $e")),
+        SnackBar(
+          content: Text("Lỗi: $e"),
+          backgroundColor: AppColors.accentRed,
+        ),
       );
     } finally {
       if (mounted) {
@@ -163,24 +179,26 @@ class _SellerAddProductScreenState extends State<SellerAddProductScreen> {
       maxLines > 1 ? TextInputAction.newline : TextInputAction.next,
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: const TextStyle(color: AppColors.textGrey, fontSize: 15),
         prefixIcon: Icon(
           icon,
-          color: textGrey,
+          color: AppColors.textGrey,
+          size: 22,
         ),
         filled: true,
         fillColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 18,
+          horizontal: 20,
           vertical: 18,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(22),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(20),
           borderSide: const BorderSide(
-            color: primaryBlue,
+            color: AppColors.primary,
             width: 1.5,
           ),
         ),
@@ -193,24 +211,26 @@ class _SellerAddProductScreenState extends State<SellerAddProductScreen> {
       value: selectedCategory,
       decoration: InputDecoration(
         labelText: "Danh mục",
+        labelStyle: const TextStyle(color: AppColors.textGrey, fontSize: 15),
         prefixIcon: const Icon(
           Icons.category_outlined,
-          color: textGrey,
+          color: AppColors.textGrey,
+          size: 22,
         ),
         filled: true,
         fillColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 18,
+          horizontal: 20,
           vertical: 18,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(22),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(20),
           borderSide: const BorderSide(
-            color: primaryBlue,
+            color: AppColors.primary,
             width: 1.5,
           ),
         ),
@@ -230,16 +250,14 @@ class _SellerAddProductScreenState extends State<SellerAddProductScreen> {
 
   Widget buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            darkBlue,
-            primaryBlue,
-          ],
+        borderRadius: BorderRadius.circular(28),
+        gradient: AppColors.primaryGradient,
+        boxShadow: AppColors.premiumShadow(
+          color: AppColors.primary.withOpacity(0.2),
+          blur: 24,
+          offset: const Offset(0, 10),
         ),
       ),
       child: Row(
@@ -249,23 +267,24 @@ class _SellerAddProductScreenState extends State<SellerAddProductScreen> {
               "Thêm sản phẩm\nvào cửa hàng",
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 22,
+                fontSize: 20,
                 fontWeight: FontWeight.w900,
-                height: 1.25,
+                height: 1.3,
+                letterSpacing: -0.5,
               ),
             ),
           ),
           Container(
-            width: 66,
-            height: 66,
+            width: 60,
+            height: 60,
             decoration: BoxDecoration(
-              color: Colors.white24,
-              borderRadius: BorderRadius.circular(24),
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(20),
             ),
             child: const Icon(
               Icons.add_business_rounded,
-              color: primaryYellow,
-              size: 40,
+              color: AppColors.secondary,
+              size: 32,
             ),
           ),
         ],
@@ -283,22 +302,23 @@ class _SellerAddProductScreenState extends State<SellerAddProductScreen> {
           width: 38,
           height: 38,
           decoration: BoxDecoration(
-            color: primaryBlue.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(14),
+            color: AppColors.primary.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
             icon,
-            color: darkBlue,
-            size: 21,
+            color: AppColors.primary,
+            size: 20,
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 12),
         Text(
           title,
           style: const TextStyle(
-            color: textDark,
-            fontSize: 20,
+            color: AppColors.textDark,
+            fontSize: 18,
             fontWeight: FontWeight.w900,
+            letterSpacing: -0.5,
           ),
         ),
       ],
@@ -307,18 +327,12 @@ class _SellerAddProductScreenState extends State<SellerAddProductScreen> {
 
   Widget buildFormCard({required List<Widget> children}) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppColors.premiumShadow(),
       ),
       child: Column(children: children),
     );
@@ -326,46 +340,48 @@ class _SellerAddProductScreenState extends State<SellerAddProductScreen> {
 
   Widget buildFeaturedSwitch() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
         color: isFeatured
-            ? primaryBlue.withOpacity(0.08)
-            : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(22),
+            ? AppColors.primary.withOpacity(0.06)
+            : Colors.white,
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isFeatured
-              ? primaryBlue.withOpacity(0.4)
-              : const Color(0xFFE5E7EB),
+              ? AppColors.primary.withOpacity(0.4)
+              : AppColors.border,
         ),
+        boxShadow: AppColors.premiumShadow(),
       ),
       child: SwitchListTile(
         contentPadding: EdgeInsets.zero,
         value: isFeatured,
-        activeColor: darkBlue,
+        activeColor: AppColors.primary,
         title: const Text(
           "Sản phẩm nổi bật",
           style: TextStyle(
-            color: textDark,
+            color: AppColors.textDark,
             fontWeight: FontWeight.w900,
+            fontSize: 15.5,
           ),
         ),
         subtitle: const Text(
           "Hiển thị sản phẩm ở trang chủ",
           style: TextStyle(
-            color: textGrey,
-            fontSize: 13,
+            color: AppColors.textGrey,
+            fontSize: 12.5,
           ),
         ),
         secondary: Container(
           width: 42,
           height: 42,
           decoration: BoxDecoration(
-            color: primaryYellow.withOpacity(0.25),
-            borderRadius: BorderRadius.circular(15),
+            color: AppColors.secondary.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(14),
           ),
           child: const Icon(
             Icons.star_rounded,
-            color: primaryYellow,
+            color: AppColors.secondary,
           ),
         ),
         onChanged: (value) {
@@ -382,9 +398,9 @@ class _SellerAddProductScreenState extends State<SellerAddProductScreen> {
       return Container(
         height: 170,
         decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border),
         ),
         child: const Center(
           child: Column(
@@ -392,15 +408,16 @@ class _SellerAddProductScreenState extends State<SellerAddProductScreen> {
             children: [
               Icon(
                 Icons.image_outlined,
-                color: textGrey,
-                size: 40,
+                color: AppColors.textLight,
+                size: 38,
               ),
               SizedBox(height: 8),
               Text(
                 "Xem trước ảnh sản phẩm",
                 style: TextStyle(
-                  color: textGrey,
+                  color: AppColors.textGrey,
                   fontWeight: FontWeight.w600,
+                  fontSize: 13,
                 ),
               ),
             ],
@@ -410,7 +427,7 @@ class _SellerAddProductScreenState extends State<SellerAddProductScreen> {
     }
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(20),
       child: Image.network(
         url,
         height: 190,
@@ -423,19 +440,19 @@ class _SellerAddProductScreenState extends State<SellerAddProductScreen> {
             height: 190,
             color: const Color(0xFFF1F5F9),
             child: const Center(
-              child: CircularProgressIndicator(color: darkBlue),
+              child: CircularProgressIndicator(color: AppColors.primary),
             ),
           );
         },
         errorBuilder: (_, __, ___) {
           return Container(
             height: 170,
-            color: const Color(0xFFF1F5F9),
+            color: const Color(0xFFF8FAFC),
             child: const Center(
               child: Text(
                 "Không tải được ảnh",
                 style: TextStyle(
-                  color: Colors.red,
+                  color: AppColors.accentRed,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -447,32 +464,43 @@ class _SellerAddProductScreenState extends State<SellerAddProductScreen> {
   }
 
   Widget buildSubmitButton() {
-    return SizedBox(
-      height: 58,
+    return Container(
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: AppColors.primaryGradient,
+        boxShadow: AppColors.premiumShadow(
+          color: AppColors.primary.withOpacity(0.25),
+          blur: 16,
+          offset: const Offset(0, 6),
+        ),
+      ),
       child: ElevatedButton.icon(
         onPressed: isLoading ? null : addProduct,
-        icon: isLoading ? const SizedBox() : const Icon(Icons.add_rounded),
+        icon: isLoading ? const SizedBox() : const Icon(Icons.add_rounded, color: Colors.white),
         label: isLoading
             ? const SizedBox(
-          width: 25,
-          height: 25,
+          width: 24,
+          height: 24,
           child: CircularProgressIndicator(
             color: Colors.white,
-            strokeWidth: 2.6,
+            strokeWidth: 2.5,
           ),
         )
             : const Text(
           "Thêm sản phẩm",
           style: TextStyle(
-            fontWeight: FontWeight.w900,
-            fontSize: 17,
+            fontWeight: FontWeight.w800,
+            fontSize: 16,
+            color: Colors.white,
           ),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: darkBlue,
+          backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
-          disabledBackgroundColor: darkBlue.withOpacity(0.65),
-          elevation: 0,
+          disabledBackgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -495,17 +523,19 @@ class _SellerAddProductScreenState extends State<SellerAddProductScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
           "Thêm sản phẩm",
           style: TextStyle(
-            color: textDark,
-            fontWeight: FontWeight.w800,
+            color: AppColors.textDark,
+            fontWeight: FontWeight.w900,
+            fontSize: 20,
+            letterSpacing: -0.5,
           ),
         ),
-        backgroundColor: bgColor,
-        foregroundColor: textDark,
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.textDark,
         elevation: 0,
         centerTitle: false,
       ),
@@ -528,9 +558,9 @@ class _SellerAddProductScreenState extends State<SellerAddProductScreen> {
                 label: "Tên sản phẩm",
                 icon: Icons.inventory_2_outlined,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               buildCategoryDropdown(),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               buildInput(
                 controller: descriptionController,
                 label: "Mô tả sản phẩm",
@@ -556,14 +586,14 @@ class _SellerAddProductScreenState extends State<SellerAddProductScreen> {
                 icon: Icons.payments_outlined,
                 keyboardType: TextInputType.number,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               buildInput(
                 controller: oldPriceController,
                 label: "Giá cũ (VNĐ) - có thể để trống",
                 icon: Icons.local_offer_outlined,
                 keyboardType: TextInputType.number,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               buildInput(
                 controller: stockController,
                 label: "Số lượng tồn kho",
@@ -589,7 +619,7 @@ class _SellerAddProductScreenState extends State<SellerAddProductScreen> {
                 icon: Icons.link_rounded,
                 keyboardType: TextInputType.url,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               buildImagePreview(),
             ],
           ),
