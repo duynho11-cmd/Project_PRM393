@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../constants/app_colors.dart';
 import '../constants/app_images.dart';
+import '../utils/app_responsive.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -10,239 +12,373 @@ class OnboardingScreen extends StatefulWidget {
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
-  static const Color primaryBlue = Color(0xFF4A90E2);
-  static const Color primaryYellow = Color(0xFFFFD93D);
-  static const Color primaryGreen = Color(0xFF22C55E);
-
+class _OnboardingScreenState extends State<OnboardingScreen>
+    with SingleTickerProviderStateMixin {
   final PageController _pageController = PageController();
-  int currentPage = 0;
+  int _currentPage = 0;
 
-  final List<Map<String, dynamic>> pages = [
-    {
-      'image': AppImages.onboarding1,
-      'title': 'Chào mừng đến với LegoKing',
-      'description': 'Khám phá hàng ngàn món đồ chơi LEGO hấp dẫn cho bé yêu.',
-      'color': primaryBlue,
-    },
-    {
-      'image': AppImages.onboarding2,
-      'title': 'Khám phá danh mục',
-      'description':
-      'Tìm kiếm LEGO, gấu bông, xe điều khiển và nhiều sản phẩm thú vị.',
-      'color': primaryYellow,
-    },
-    {
-      'image': AppImages.onboarding3,
-      'title': 'An toàn - Chất lượng',
-      'description': 'Sản phẩm chính hãng, an toàn và phù hợp cho trẻ em.',
-      'color': primaryGreen,
-    },
+  late final AnimationController _btnCtrl;
+  late final Animation<double>   _btnScale;
+
+  final List<_OnboardPage> _pages = const [
+    _OnboardPage(
+      image:       AppImages.onboarding1,
+      title:       'Chào mừng đến với\nLegoKing',
+      description: 'Khám phá hàng ngàn món đồ chơi LEGO hấp dẫn, '
+          'được chọn lọc kỹ càng cho bé yêu của bạn.',
+      accent: AppColors.primary,
+      badge:  '🧱',
+    ),
+    _OnboardPage(
+      image:       AppImages.onboarding2,
+      title:       'Đa dạng danh mục\ncho bé',
+      description: 'LEGO, gấu bông, xe điều khiển, đồ chơi giáo dục '
+          '— tất cả trong một ứng dụng.',
+      accent: AppColors.secondary,
+      badge:  '🎠',
+    ),
+    _OnboardPage(
+      image:       AppImages.onboarding3,
+      title:       'An toàn &\nChất lượng cao',
+      description: 'Sản phẩm chính hãng, đạt chuẩn an toàn quốc tế, '
+          'giao hàng nhanh đến tận tay.',
+      accent: AppColors.success,
+      badge:  '✅',
+    ),
   ];
 
-  Future<void> _finishOnboarding() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('seenOnboarding', true);
-
-    if (!mounted) return;
-    Navigator.pushReplacementNamed(context, '/login');
-  }
-
-  void _nextPage() {
-    if (currentPage == pages.length - 1) {
-      _finishOnboarding();
-    } else {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeInOut,
-      );
-    }
-  }
-
-  Widget _buildIndicator(int index) {
-    final bool isActive = currentPage == index;
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      margin: const EdgeInsets.symmetric(horizontal: 5),
-      width: isActive ? 28 : 9,
-      height: 9,
-      decoration: BoxDecoration(
-        color: isActive ? primaryBlue : Colors.grey.shade300,
-        borderRadius: BorderRadius.circular(30),
-      ),
+  @override
+  void initState() {
+    super.initState();
+    _btnCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+      lowerBound: 0.94,
+      upperBound: 1.0,
+      value: 1.0,
     );
+    _btnScale = _btnCtrl;
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _btnCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _finishOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('seenOnboarding', true);
+    if (!mounted) return;
+    Navigator.pushReplacementNamed(context, '/login');
+  }
+
+  void _nextPage() {
+    if (_currentPage == _pages.length - 1) {
+      _finishOnboarding();
+    } else {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOutCubic,
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final page = pages[currentPage];
+    final r    = AppResponsive(context);
+    final page = _pages[_currentPage];
 
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              (page['color'] as Color).withOpacity(0.18),
-              const Color(0xFFF8FAFC),
-              Colors.white,
-            ],
+      backgroundColor: AppColors.background,
+      body: Stack(
+        children: [
+          // Decorative accent circle
+          Positioned(
+            top:   -r.h(100),
+            right: -r.w(60),
+            child: Container(
+              width: r.w(280), height: r.w(280),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: page.accent.withValues(alpha: 0.08),
+              ),
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'LegoKing',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: primaryBlue,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: _finishOnboarding,
-                      child: const Text(
-                        'Bỏ qua',
-                        style: TextStyle(
-                          color: Color(0xFF64748B),
-                          fontWeight: FontWeight.w600,
+
+          SafeArea(
+            child: Column(
+              children: [
+                // ── Top bar ─────────────────────────────────────
+                Padding(
+                  padding: r.sym(24, 16),
+                  child: Row(
+                    children: [
+                      // Logo pill
+                      Container(
+                        padding: r.sym(14, 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(
+                              AppColors.radiusMd),
+                          boxShadow: AppColors.softShadow(),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: r.w(8), height: r.w(8),
+                              decoration: BoxDecoration(
+                                color: page.accent,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            SizedBox(width: r.w(7)),
+                            Text(
+                              'LegoKing',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: r.sp(14),
+                                color: AppColors.textDark,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                  ],
+                      const Spacer(),
+                      TextButton(
+                        onPressed: _finishOnboarding,
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.textGrey,
+                          padding: r.sym(14, 8),
+                          backgroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                                AppColors.radiusMd),
+                            side: const BorderSide(color: AppColors.border),
+                          ),
+                        ),
+                        child: Text(
+                          'Bỏ qua',
+                          style: TextStyle(
+                            fontSize: r.sp(13),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-              Expanded(
-                child: PageView.builder(
-                  controller: _pageController,
-                  itemCount: pages.length,
-                  onPageChanged: (index) {
-                    setState(() {
-                      currentPage = index;
-                    });
-                  },
-                  itemBuilder: (context, index) {
-                    final item = pages[index];
-                    final Color itemColor = item['color'] as Color;
+                // ── PageView ─────────────────────────────────────
+                Expanded(
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: _pages.length,
+                    onPageChanged: (i) =>
+                        setState(() => _currentPage = i),
+                    itemBuilder: (_, index) =>
+                        _buildPage(_pages[index], r),
+                  ),
+                ),
 
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 26),
-                      child: Column(
+                // ── Bottom CTA ────────────────────────────────────
+                Padding(
+                  padding: r.fromLTRB(24, 0, 24, 32),
+                  child: Column(
+                    children: [
+                      // Dots
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
+                        children: List.generate(
+                          _pages.length,
+                              (i) => _buildDot(i, page.accent, r),
+                        ),
+                      ),
+                      SizedBox(height: r.h(28)),
+
+                      // Button
+                      GestureDetector(
+                        onTapDown:  (_) => _btnCtrl.reverse(),
+                        onTapUp:    (_) { _btnCtrl.forward(); _nextPage(); },
+                        onTapCancel: () => _btnCtrl.forward(),
+                        child: ScaleTransition(
+                          scale: _btnScale,
+                          child: Container(
                             width: double.infinity,
-                            height: 330,
+                            height: r.h(58),
                             decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(36),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: itemColor.withOpacity(0.25),
-                                  blurRadius: 30,
-                                  offset: const Offset(0, 16),
+                              borderRadius: BorderRadius.circular(
+                                  AppColors.radiusLg),
+                              gradient: _currentPage == _pages.length - 1
+                                  ? const LinearGradient(
+                                colors: [
+                                  AppColors.success,
+                                  Color(0xFF059669),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                                  : AppColors.primaryGradient,
+                              boxShadow: AppColors.coloredShadow(
+                                _currentPage == _pages.length - 1
+                                    ? AppColors.success
+                                    : AppColors.primary,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  _currentPage == _pages.length - 1
+                                      ? 'Bắt đầu ngay'
+                                      : 'Tiếp tục',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: r.sp(16),
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                                SizedBox(width: r.w(8)),
+                                Icon(
+                                  Icons.arrow_forward_rounded,
+                                  color: Colors.white,
+                                  size: r.icon(20),
                                 ),
                               ],
                             ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(36),
-                              child: Image.asset(
-                                item['image'],
-                                fit: BoxFit.cover,
-                              ),
-                            ),
                           ),
-
-                          const SizedBox(height: 46),
-
-                          Text(
-                            item['title'],
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF111827),
-                            ),
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          Text(
-                            item['description'],
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              height: 1.6,
-                              color: Color(0xFF64748B),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    );
-                  },
+                    ],
+                  ),
                 ),
-              ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  pages.length,
-                      (index) => _buildIndicator(index),
-                ),
-              ),
-
-              const SizedBox(height: 30),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 26),
-                child: SizedBox(
+  Widget _buildPage(_OnboardPage item, AppResponsive r) {
+    return Padding(
+      padding: r.symH(24),
+      child: Column(
+        children: [
+          // Image card
+          Expanded(
+            flex: 5,
+            child: Stack(
+              children: [
+                Container(
+                  margin: EdgeInsets.only(top: r.h(8), bottom: r.h(16)),
                   width: double.infinity,
-                  height: 58,
-                  child: ElevatedButton(
-                    onPressed: _nextPage,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryBlue,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(22),
-                      ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(AppColors.radiusXxl),
+                    boxShadow: AppColors.premiumShadow(
+                      color: item.accent.withValues(alpha: 0.10),
+                      blur: 30,
+                      offset: Offset(0, r.h(14)),
                     ),
-                    child: Text(
-                      currentPage == pages.length - 1
-                          ? 'Bắt đầu ngay'
-                          : 'Tiếp tục',
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
+                  ),
+                  child: ClipRRect(
+                    borderRadius:
+                    BorderRadius.circular(AppColors.radiusXxl),
+                    child: Image.asset(item.image, fit: BoxFit.cover),
+                  ),
+                ),
+                // Badge
+                Positioned(
+                  top:   r.h(20),
+                  right: r.w(20),
+                  child: Container(
+                    width:  r.w(48),
+                    height: r.w(48),
+                    decoration: BoxDecoration(
+                      color: item.accent,
+                      borderRadius: BorderRadius.circular(r.r(14)),
+                      boxShadow: AppColors.coloredShadow(item.accent),
+                    ),
+                    child: Center(
+                      child: Text(
+                        item.badge,
+                        style: TextStyle(fontSize: r.sp(22)),
                       ),
                     ),
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 26),
-            ],
+              ],
+            ),
           ),
-        ),
+
+          // Text
+          Expanded(
+            flex: 3,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  item.title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: r.sp(26),
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textDark,
+                    letterSpacing: -0.5,
+                    height: 1.25,
+                  ),
+                ),
+                SizedBox(height: r.h(14)),
+                Text(
+                  item.description,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: r.sp(15),
+                    color: AppColors.textGrey,
+                    height: 1.6,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
+
+  Widget _buildDot(int index, Color accent, AppResponsive r) {
+    final bool active = _currentPage == index;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      margin: EdgeInsets.symmetric(horizontal: r.w(4)),
+      width:  active ? r.w(28) : r.w(8),
+      height: r.h(8),
+      decoration: BoxDecoration(
+        color: active ? accent : AppColors.border,
+        borderRadius: BorderRadius.circular(r.r(20)),
+      ),
+    );
+  }
+}
+
+class _OnboardPage {
+  final String image;
+  final String title;
+  final String description;
+  final Color  accent;
+  final String badge;
+
+  const _OnboardPage({
+    required this.image,
+    required this.title,
+    required this.description,
+    required this.accent,
+    required this.badge,
+  });
 }

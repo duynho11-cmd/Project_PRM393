@@ -1,161 +1,137 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+import '../constants/app_colors.dart';
+import '../utils/app_responsive.dart';
 import 'product_list_screen.dart';
 
 class CategoryScreen extends StatelessWidget {
   const CategoryScreen({super.key});
 
-  static const Color primaryBlue = Color(0xFF4A90E2);
-  static const Color darkBlue = Color(0xFF0B4DBA);
-  static const Color bgColor = Color(0xFFF8FAFC);
-  static const Color textDark = Color(0xFF111827);
-  static const Color textGrey = Color(0xFF64748B);
-
-  String viName(String name) {
-    switch (name) {
-      case 'Educational':
-        return 'Giáo dục';
-      case 'LEGO':
-        return 'LEGO';
-      case 'Outdoor':
-        return 'Ngoài trời';
-      case 'RC Toys':
-        return 'Xe điều khiển';
-      case 'Teddy Bears':
-        return 'Gấu bông';
-      default:
-        return name;
-    }
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  String _viName(String name) {
+    const map = {
+      'Educational': 'Giáo dục',
+      'LEGO':        'LEGO',
+      'Outdoor':     'Ngoài trời',
+      'RC Toys':     'Xe điều khiển',
+      'Teddy Bears': 'Gấu bông',
+    };
+    return map[name] ?? name;
   }
 
-  IconData getIcon(String icon) {
+  IconData _getIcon(String icon) {
     switch (icon) {
-      case 'extension':
-        return Icons.extension_rounded;
-      case 'toys':
-        return Icons.toys_rounded;
-      case 'school':
-        return Icons.school_rounded;
-      case 'car':
-        return Icons.directions_car_rounded;
-      case 'outdoor':
-        return Icons.sports_soccer_rounded;
-      default:
-        return Icons.category_rounded;
+      case 'extension': return Icons.extension_rounded;
+      case 'toys':      return Icons.toys_rounded;
+      case 'school':    return Icons.school_rounded;
+      case 'car':       return Icons.directions_car_rounded;
+      case 'outdoor':   return Icons.sports_soccer_rounded;
+      default:          return Icons.category_rounded;
     }
   }
 
-  Color getColor(String color) {
+  Color _getColor(String color) {
     switch (color) {
-      case 'blue':
-        return primaryBlue;
-      case 'orange':
-        return Colors.orange;
-      case 'green':
-        return const Color(0xFF22C55E);
-      case 'red':
-        return const Color(0xFFFB7185);
-      case 'purple':
-        return const Color(0xFF8B5CF6);
-      default:
-        return darkBlue;
+      case 'blue':   return AppColors.primary;
+      case 'orange': return AppColors.secondary;
+      case 'green':  return AppColors.success;
+      case 'red':    return AppColors.accentRed;
+      case 'purple': return const Color(0xFF8B5CF6);
+      default:       return AppColors.primary;
     }
   }
 
-  Widget buildCategoryCard({
+  // ── Category card ─────────────────────────────────────────────────────────
+  Widget _buildCard({
     required BuildContext context,
+    required AppResponsive r,
     required String displayName,
     required String categoryName,
     required String icon,
     required String color,
   }) {
-    final Color itemColor = getColor(color);
+    final Color itemColor = _getColor(color);
 
     return InkWell(
-      borderRadius: BorderRadius.circular(26),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ProductListScreen(
-              categoryName: categoryName,
-            ),
-          ),
-        );
-      },
+      borderRadius: BorderRadius.circular(r.r(26)),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ProductListScreen(categoryName: categoryName),
+        ),
+      ),
       child: Container(
-        padding: const EdgeInsets.all(18),
+        padding: r.all(18),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(26),
-          border: Border.all(
-            color: const Color(0xFFE5E7EB),
+          borderRadius: BorderRadius.circular(r.r(26)),
+          border: Border.all(color: AppColors.border),
+          boxShadow: AppColors.premiumShadow(
+            color: itemColor.withValues(alpha: 0.06),
+            blur: 16,
+            offset: const Offset(0, 8),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: itemColor.withOpacity(0.12),
-              blurRadius: 22,
-              offset: const Offset(0, 12),
-            ),
-          ],
         ),
+        // Dùng Column với mainAxisSize.min để tránh overflow
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
+            // Icon container
             Container(
-              width: 58,
-              height: 58,
+              width:  r.w(52),
+              height: r.w(52),
               decoration: BoxDecoration(
-                color: itemColor.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(20),
+                color: itemColor.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(r.r(16)),
               ),
-              child: Icon(
-                getIcon(icon),
-                color: itemColor,
-                size: 32,
-              ),
+              child: Icon(_getIcon(icon),
+                  color: itemColor, size: r.icon(26)),
             ),
 
-            const Spacer(),
+            SizedBox(height: r.h(14)),
 
+            // Category name — flexible, không bị overflow
             Text(
               displayName,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: textDark,
-                fontSize: 17,
+              style: TextStyle(
+                color: AppColors.textDark,
+                fontSize: r.sp(15),
                 fontWeight: FontWeight.w800,
-                height: 1.2,
+                letterSpacing: -0.4,
+                height: 1.25,
               ),
             ),
 
-            const SizedBox(height: 8),
+            SizedBox(height: r.h(10)),
 
+            // Footer row
             Row(
               children: [
-                const Text(
-                  'Xem sản phẩm',
-                  style: TextStyle(
-                    color: textGrey,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                Expanded(
+                  child: Text(
+                    'Xem sản phẩm',
+                    style: TextStyle(
+                      color: AppColors.textGrey,
+                      fontSize: r.sp(12),
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const Spacer(),
+                SizedBox(width: r.w(6)),
                 Container(
-                  width: 30,
-                  height: 30,
+                  width:  r.w(28),
+                  height: r.w(28),
                   decoration: BoxDecoration(
-                    color: itemColor.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(12),
+                    color: itemColor.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(r.r(10)),
                   ),
-                  child: Icon(
-                    Icons.arrow_forward_rounded,
-                    color: itemColor,
-                    size: 18,
-                  ),
+                  child: Icon(Icons.arrow_forward_rounded,
+                      color: itemColor, size: r.icon(15)),
                 ),
               ],
             ),
@@ -165,57 +141,20 @@ class CategoryScreen extends StatelessWidget {
     );
   }
 
-  Widget buildLoading() {
-    return const Center(
-      child: CircularProgressIndicator(
-        color: darkBlue,
-      ),
-    );
-  }
-
-  Widget buildEmpty() {
-    return const Center(
-      child: Text(
-        'Chưa có danh mục nào',
-        style: TextStyle(
-          color: textGrey,
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-
-  Widget buildError(Object? error) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Text(
-          'Lỗi: $error',
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.red,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final r = AppResponsive(context);
+
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: bgColor,
-        foregroundColor: textDark,
-        elevation: 0,
-        centerTitle: false,
-        title: const Text(
+        title: Text(
           'Danh mục sản phẩm',
           style: TextStyle(
-            fontWeight: FontWeight.w800,
-            color: textDark,
+            fontWeight: FontWeight.w900,
+            color: AppColors.textDark,
+            fontSize: r.sp(20),
+            letterSpacing: -0.5,
           ),
         ),
       ),
@@ -226,89 +165,126 @@ class CategoryScreen extends StatelessWidget {
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return buildLoading();
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            );
           }
 
           if (snapshot.hasError) {
-            return buildError(snapshot.error);
+            return Center(
+              child: Padding(
+                padding: r.all(24),
+                child: Text(
+                  'Lỗi: ${snapshot.error}',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.accentRed,
+                    fontWeight: FontWeight.w600,
+                    fontSize: r.sp(14),
+                  ),
+                ),
+              ),
+            );
           }
 
           final docs = snapshot.data?.docs ?? [];
 
           if (docs.isEmpty) {
-            return buildEmpty();
+            return Center(
+              child: Text(
+                'Chưa có danh mục nào',
+                style: TextStyle(
+                  color: AppColors.textGrey,
+                  fontSize: r.sp(15),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            );
           }
+
+          // Tablet: 3 cột, phone: 2 cột
+          final crossCount = r.isTablet ? 3 : 2;
 
           return CustomScrollView(
             slivers: [
+              // ── Hero banner ──────────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                  padding: r.fromLTRB(20, 8, 20, 20),
                   child: Container(
-                    padding: const EdgeInsets.all(22),
+                    padding: r.all(22),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(30),
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          darkBlue,
-                          primaryBlue,
-                        ],
-                      ),
+                      borderRadius:
+                      BorderRadius.circular(AppColors.radiusXl),
+                      gradient: AppColors.primaryGradient,
+                      boxShadow: AppColors.coloredShadow(AppColors.primary),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
                         Expanded(
-                          child: Text(
-                            'Khám phá đồ chơi\nphù hợp cho bé',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                              height: 1.25,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Khám phá đồ chơi\nphù hợp cho bé',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: r.sp(20),
+                                  fontWeight: FontWeight.w900,
+                                  height: 1.3,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              SizedBox(height: r.h(8)),
+                              Text(
+                                '${docs.length} danh mục',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: r.sp(13),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        Icon(
-                          Icons.category_rounded,
-                          color: Color(0xFFFFD93D),
-                          size: 64,
-                        ),
+                        Icon(Icons.category_rounded,
+                            color: AppColors.secondary,
+                            size: r.icon(56)),
                       ],
                     ),
                   ),
                 ),
               ),
 
+              // ── Grid ─────────────────────────────────────────────
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                padding: r.fromLTRB(20, 0, 20, 24),
                 sliver: SliverGrid(
                   delegate: SliverChildBuilderDelegate(
                         (context, index) {
-                      final data = docs[index].data();
-
+                      final data         = docs[index].data();
                       final originalName = data['name'] ?? '';
-                      final displayName = viName(originalName);
-                      final icon = data['icon'] ?? '';
-                      final color = data['color'] ?? '';
+                      final displayName  = _viName(originalName);
+                      final icon         = data['icon']  ?? '';
+                      final color        = data['color'] ?? '';
 
-                      return buildCategoryCard(
-                        context: context,
-                        displayName: displayName,
+                      return _buildCard(
+                        context:      context,
+                        r:            r,
+                        displayName:  displayName,
                         categoryName: originalName,
-                        icon: icon,
-                        color: color,
+                        icon:         icon,
+                        color:        color,
                       );
                     },
                     childCount: docs.length,
                   ),
-                  gridDelegate:
-                  const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    childAspectRatio: 0.9,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount:  crossCount,
+                    mainAxisSpacing:  r.h(16),
+                    crossAxisSpacing: r.w(16),
+                    // Tăng ratio để đủ chỗ cho nội dung, tránh overflow
+                    childAspectRatio: r.isTablet ? 0.90 : 0.88,
                   ),
                 ),
               ),

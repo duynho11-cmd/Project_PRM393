@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../constants/app_colors.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -10,13 +11,6 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  static const Color primaryBlue = Color(0xFF4A90E2);
-  static const Color darkBlue = Color(0xFF0B4DBA);
-  static const Color primaryYellow = Color(0xFFFFD93D);
-  static const Color bgColor = Color(0xFFF8FAFC);
-  static const Color textDark = Color(0xFF111827);
-  static const Color textGrey = Color(0xFF64748B);
-
   final emailController = TextEditingController();
   bool isLoading = false;
 
@@ -29,14 +23,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Vui lòng nhập email")),
+        const SnackBar(
+          content: Text("Vui lòng nhập email"),
+          backgroundColor: AppColors.accentRed,
+        ),
       );
       return;
     }
 
     if (!isValidEmail(email)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Email không hợp lệ")),
+        const SnackBar(
+          content: Text("Email không hợp lệ"),
+          backgroundColor: AppColors.accentRed,
+        ),
       );
       return;
     }
@@ -53,12 +53,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Link đặt lại mật khẩu đã được gửi vào email"),
+          backgroundColor: AppColors.success,
         ),
       );
       Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
+        SnackBar(
+          content: Text(error),
+          backgroundColor: AppColors.accentRed,
+        ),
       );
     }
   }
@@ -71,24 +75,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Widget buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            darkBlue,
-            primaryBlue,
-          ],
+        borderRadius: BorderRadius.circular(28),
+        gradient: AppColors.primaryGradient,
+        boxShadow: AppColors.premiumShadow(
+          color: AppColors.primary.withOpacity(0.2),
+          blur: 24,
+          offset: const Offset(0, 10),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: darkBlue.withOpacity(0.18),
-            blurRadius: 28,
-            offset: const Offset(0, 14),
-          ),
-        ],
       ),
       child: Row(
         children: [
@@ -99,7 +94,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 color: Colors.white,
                 fontSize: 24,
                 fontWeight: FontWeight.w900,
-                height: 1.25,
+                height: 1.3,
+                letterSpacing: -0.5,
               ),
             ),
           ),
@@ -107,13 +103,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: Colors.white24,
-              borderRadius: BorderRadius.circular(26),
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(22),
             ),
             child: const Icon(
               Icons.lock_reset_rounded,
-              color: primaryYellow,
-              size: 44,
+              color: AppColors.secondary,
+              size: 40,
             ),
           ),
         ],
@@ -123,12 +119,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Widget buildInfoCard() {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: primaryBlue.withOpacity(0.08),
+        color: AppColors.primary.withOpacity(0.06),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: primaryBlue.withOpacity(0.18),
+          color: AppColors.primary.withOpacity(0.12),
         ),
       ),
       child: const Row(
@@ -136,15 +132,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         children: [
           Icon(
             Icons.info_outline_rounded,
-            color: darkBlue,
+            color: AppColors.primary,
             size: 22,
           ),
-          SizedBox(width: 10),
+          SizedBox(width: 12),
           Expanded(
             child: Text(
               "Nhập email đã đăng ký. LegoKing sẽ gửi link đặt lại mật khẩu vào hộp thư của bạn.",
               style: TextStyle(
-                color: textGrey,
+                color: AppColors.textGrey,
                 fontSize: 14,
                 height: 1.5,
                 fontWeight: FontWeight.w600,
@@ -164,27 +160,30 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       onSubmitted: (_) => sendResetEmail(),
       decoration: InputDecoration(
         labelText: "Email",
+        labelStyle: const TextStyle(color: AppColors.textGrey, fontSize: 15),
         hintText: "example@gmail.com",
+        hintStyle: const TextStyle(color: AppColors.textLight, fontSize: 15),
         prefixIcon: const Icon(
           Icons.email_outlined,
-          color: textGrey,
+          color: AppColors.textGrey,
+          size: 22,
         ),
         filled: true,
         fillColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 18,
+          horizontal: 20,
           vertical: 18,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(20),
           borderSide: const BorderSide(
-            color: Color(0xFFE5E7EB),
+            color: AppColors.border,
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(20),
           borderSide: const BorderSide(
-            color: primaryBlue,
+            color: AppColors.primary,
             width: 1.5,
           ),
         ),
@@ -193,35 +192,46 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Widget buildSubmitButton() {
-    return SizedBox(
+    return Container(
       width: double.infinity,
-      height: 58,
+      height: 56,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: AppColors.primaryGradient,
+        boxShadow: AppColors.premiumShadow(
+          color: AppColors.primary.withOpacity(0.25),
+          blur: 16,
+          offset: const Offset(0, 6),
+        ),
+      ),
       child: ElevatedButton.icon(
         onPressed: isLoading ? null : sendResetEmail,
         icon: isLoading
             ? const SizedBox()
-            : const Icon(Icons.send_rounded),
+            : const Icon(Icons.send_rounded, color: Colors.white),
         label: isLoading
             ? const SizedBox(
-          width: 25,
-          height: 25,
+          width: 24,
+          height: 24,
           child: CircularProgressIndicator(
             color: Colors.white,
-            strokeWidth: 2.6,
+            strokeWidth: 2.5,
           ),
         )
             : const Text(
           "Gửi link đặt lại mật khẩu",
           style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w900,
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.5,
+            color: Colors.white,
           ),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: darkBlue,
+          backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
-          disabledBackgroundColor: darkBlue.withOpacity(0.65),
-          elevation: 0,
+          disabledBackgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -246,7 +256,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
       ),
       style: TextButton.styleFrom(
-        foregroundColor: darkBlue,
+        foregroundColor: AppColors.primary,
       ),
     );
   }
@@ -254,17 +264,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
           "Quên mật khẩu",
           style: TextStyle(
-            color: textDark,
-            fontWeight: FontWeight.w800,
+            color: AppColors.textDark,
+            fontWeight: FontWeight.w900,
+            fontSize: 20,
+            letterSpacing: -0.5,
           ),
         ),
-        backgroundColor: bgColor,
-        foregroundColor: textDark,
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.textDark,
         elevation: 0,
         centerTitle: false,
       ),
@@ -281,23 +293,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             const SizedBox(height: 24),
 
             Container(
-              padding: const EdgeInsets.all(18),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: const Color(0xFFE5E7EB)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 16,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
+                border: Border.all(color: AppColors.border),
+                boxShadow: AppColors.premiumShadow(),
               ),
               child: Column(
                 children: [
                   buildEmailInput(),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 20),
                   buildSubmitButton(),
                 ],
               ),

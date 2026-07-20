@@ -1,9 +1,12 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../constants/app_colors.dart';
 import '../models/product_model.dart';
 import '../services/product_service.dart';
+import '../utils/app_responsive.dart';
 import 'product_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -14,237 +17,228 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  static const Color primaryBlue = Color(0xFF4A90E2);
-  static const Color darkBlue = Color(0xFF0B4DBA);
-  static const Color primaryYellow = Color(0xFFFFD93D);
-  static const Color bgColor = Color(0xFFF8FAFC);
-  static const Color textDark = Color(0xFF111827);
-  static const Color textGrey = Color(0xFF64748B);
+  String fullName     = 'Khách hàng';
+  int    _currentIndex = 0;
+  String _searchText  = '';
+  int    _bannerIndex = 0;
+  final  PageController _bannerCtrl = PageController();
 
-  String fullName = 'Khách hàng';
-  int currentIndex = 0;
-  String searchText = '';
+  static const _categories = [
+    {'name': 'LEGO',       'icon': Icons.extension_rounded,     'color': AppColors.primary},
+    {'name': 'Gấu bông',   'icon': Icons.toys_rounded,          'color': AppColors.secondary},
+    {'name': 'Giáo dục',   'icon': Icons.school_rounded,        'color': AppColors.success},
+    {'name': 'Xe RC',      'icon': Icons.directions_car_rounded, 'color': Color(0xFFFB7185)},
+    {'name': 'Ngoài trời', 'icon': Icons.sports_soccer_rounded,  'color': Color(0xFF8B5CF6)},
+  ];
 
-  final categories = [
-    {'name': 'LEGO', 'icon': Icons.extension, 'color': primaryBlue},
-    {'name': 'Gấu bông', 'icon': Icons.toys, 'color': primaryYellow},
-    {'name': 'Giáo dục', 'icon': Icons.school, 'color': Color(0xFF22C55E)},
-    {'name': 'Xe RC', 'icon': Icons.directions_car, 'color': Color(0xFFFB7185)},
-    {'name': 'outdoor', 'icon': Icons.sports_soccer_rounded, 'color': Color(0xFF8B5CF6)},
+  static const List<_BannerItem> _banners = [
+    _BannerItem(
+      label: 'BỘ SƯU TẬP MỚI', title: 'Giảm giá\ntới 50%',
+      icon: Icons.extension_rounded,
+      gradient: AppColors.primaryGradient,
+      accentColor: AppColors.secondary,
+    ),
+    _BannerItem(
+      label: 'ĐỒ CHƠI GIÁO DỤC', title: 'Phát triển\ntư duy bé',
+      icon: Icons.school_rounded,
+      gradient: LinearGradient(
+        begin: Alignment.topLeft, end: Alignment.bottomRight,
+        colors: [Color(0xFF059669), Color(0xFF10B981)],
+      ),
+      accentColor: Color(0xFFFEF3C7),
+    ),
+    _BannerItem(
+      label: 'XE ĐIỀU KHIỂN', title: 'Tốc độ &\nMạo hiểm',
+      icon: Icons.directions_car_rounded,
+      gradient: LinearGradient(
+        begin: Alignment.topLeft, end: Alignment.bottomRight,
+        colors: [Color(0xFFDB2777), Color(0xFFFB7185)],
+      ),
+      accentColor: Color(0xFFFEE2E2),
+    ),
   ];
 
   @override
   void initState() {
     super.initState();
-    loadUser();
+    _loadUser();
   }
 
-  Future<void> loadUser() async {
+  @override
+  void dispose() {
+    _bannerCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadUser() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-
     final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .get();
-
+        .collection('users').doc(user.uid).get();
     if (!mounted) return;
-
     setState(() {
       fullName = doc.data()?['fullName'] ?? user.email ?? 'Khách hàng';
     });
   }
 
-  String formatPrice(int price) {
-    return '${price.toString().replaceAllMapped(
-      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-          (m) => '${m[1]}.',
-    )}đ';
+  String _fmt(int price) => '${price.toString().replaceAllMapped(
+      RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ';
+
+  void _handleBottomNav(int index) {
+    setState(() => _currentIndex = index);
+    if (index == 1) Navigator.pushNamed(context, '/category');
+    else if (index == 2) Navigator.pushNamed(context, '/orders');
+    else if (index == 3) Navigator.pushNamed(context, '/cart');
+    else if (index == 4) Navigator.pushNamed(context, '/profile');
   }
 
-  void handleBottomNav(int index) {
-    setState(() => currentIndex = index);
-
-    if (index == 1) {
-      Navigator.pushNamed(context, '/category');
-    } else if (index == 2) {
-      Navigator.pushNamed(context, '/orders');
-    } else if (index == 3) {
-      Navigator.pushNamed(context, '/cart');
-    } else if (index == 4) {
-      Navigator.pushNamed(context, '/profile');
-    }
-  }
-
-  Widget buildProductCard(ProductModel product) {
+  // ─── Product card ──────────────────────────────────────────────────────────
+  Widget _buildProductCard(ProductModel product, AppResponsive r) {
     final bool hasDiscount =
         product.oldPrice > 0 && product.oldPrice > product.price;
+    final int discountPct = hasDiscount
+        ? ((1 - product.price / product.oldPrice) * 100).round()
+        : 0;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(24),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ProductDetailScreen(product: product),
-          ),
-        );
-      },
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (_) => ProductDetailScreen(product: product)),
+      ),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 18,
-              offset: const Offset(0, 10),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(AppColors.radiusXl),
+          border: Border.all(color: AppColors.border),
+          boxShadow: AppColors.softShadow(),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Image
             Expanded(
               child: Stack(
                 children: [
                   ClipRRect(
                     borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(24),
-                    ),
-                    child: Image.network(
-                      product.image,
+                        top: Radius.circular(AppColors.radiusXl)),
+                    child: CachedNetworkImage(
+                      imageUrl: product.image,
                       width: double.infinity,
                       height: double.infinity,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) {
-                        return Container(
-                          color: const Color(0xFFF1F5F9),
-                          child: const Icon(
-                            Icons.image_not_supported_outlined,
-                            color: textGrey,
-                          ),
-                        );
-                      },
+                      placeholder: (_, __) => Container(
+                        color: AppColors.surfaceVariant,
+                      ),
+                      errorWidget: (_, __, ___) => Container(
+                        color: AppColors.surfaceVariant,
+                        child: Icon(Icons.image_not_supported_outlined,
+                            color: AppColors.textLight,
+                            size: r.icon(32)),
+                      ),
                     ),
                   ),
                   if (hasDiscount)
                     Positioned(
-                      top: 10,
-                      left: 10,
+                      top: r.h(10), left: r.w(10),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 9,
-                          vertical: 5,
-                        ),
+                        padding: r.sym(8, 4),
                         decoration: BoxDecoration(
-                          color: primaryYellow,
-                          borderRadius: BorderRadius.circular(20),
+                          color: AppColors.accentRed,
+                          borderRadius:
+                          BorderRadius.circular(AppColors.radiusSm),
                         ),
-                        child: const Text(
-                          'SALE',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
+                        child: Text('-$discountPct%',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: r.sp(10),
+                                fontWeight: FontWeight.w900)),
                       ),
                     ),
+                  // Wishlist
+                  Positioned(
+                    top: r.h(8), right: r.w(8),
+                    child: Container(
+                      width: r.w(32), height: r.w(32),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        shape: BoxShape.circle,
+                        boxShadow: AppColors.softShadow(),
+                      ),
+                      child: Icon(Icons.favorite_border_rounded,
+                          size: r.icon(16), color: AppColors.textGrey),
+                    ),
+                  ),
                 ],
               ),
             ),
-
+            // Info
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 11, 12, 12),
+              padding: r.fromLTRB(12, 10, 12, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    product.category,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: textGrey,
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-
-                  const SizedBox(height: 5),
-
-                  Text(
-                    product.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: textDark,
-                      height: 1.25,
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.star_rounded,
-                        color: primaryYellow,
-                        size: 17,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        product.rating.toString(),
-                        style: const TextStyle(
-                          fontSize: 12,
+                  Text(product.category.toUpperCase(),
+                      style: TextStyle(
+                          color: AppColors.textLight,
+                          fontSize: r.sp(9),
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.2)),
+                  SizedBox(height: r.h(3)),
+                  Text(product.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
                           fontWeight: FontWeight.w700,
-                          color: textDark,
+                          color: AppColors.textDark,
+                          fontSize: r.sp(13),
+                          height: 1.3)),
+                  SizedBox(height: r.h(6)),
+                  Row(children: [
+                    Icon(Icons.star_rounded,
+                        color: AppColors.secondary, size: r.icon(13)),
+                    SizedBox(width: r.w(2)),
+                    Text(product.rating.toString(),
+                        style: TextStyle(
+                            fontSize: r.sp(11),
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textDark)),
+                  ]),
+                  SizedBox(height: r.h(8)),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(_fmt(product.price),
+                                style: TextStyle(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: r.sp(15))),
+                            if (hasDiscount)
+                              Text(_fmt(product.oldPrice),
+                                  style: TextStyle(
+                                      color: AppColors.textLight,
+                                      decoration: TextDecoration.lineThrough,
+                                      fontSize: r.sp(11))),
+                          ],
                         ),
                       ),
-                      const Spacer(),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
+                        width: r.w(30), height: r.w(30),
                         decoration: BoxDecoration(
-                          color: primaryBlue.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(12),
+                          color: AppColors.primary,
+                          borderRadius:
+                          BorderRadius.circular(AppColors.radiusSm),
                         ),
-                        child: Text(
-                          'Còn ${product.stock}',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: darkBlue,
-                          ),
-                        ),
+                        child: Icon(Icons.add_rounded,
+                            color: Colors.white, size: r.icon(18)),
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 8),
-
-                  Text(
-                    formatPrice(product.price),
-                    style: const TextStyle(
-                      color: darkBlue,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 16,
-                    ),
-                  ),
-
-                  if (hasDiscount)
-                    Text(
-                      formatPrice(product.oldPrice),
-                      style: const TextStyle(
-                        color: textGrey,
-                        decoration: TextDecoration.lineThrough,
-                        fontSize: 12,
-                      ),
-                    ),
                 ],
               ),
             ),
@@ -254,275 +248,488 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget buildSearchBar() {
-    return TextField(
-      onChanged: (value) {
-        setState(() {
-          searchText = value.trim().toLowerCase();
-        });
-      },
-      decoration: InputDecoration(
-        hintText: 'Tìm LEGO, gấu bông, xe điều khiển...',
-        prefixIcon: const Icon(Icons.search_rounded, color: textGrey),
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 18,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(22),
-          borderSide: BorderSide.none,
-        ),
-      ),
+  // ─── Search bar — tách ra widget ngoài để không rebuild HomeScreen ──────────
+  Widget _buildSearchBar(AppResponsive r) {
+    return _SearchBar(
+      onChanged: (v) => setState(() => _searchText = v),
+      r: r,
     );
   }
 
-  Widget buildBanner() {
-    return Container(
-      height: 168,
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        gradient: const LinearGradient(
-          colors: [darkBlue, primaryBlue],
-        ),
-      ),
-      child: Row(
-        children: [
-          const Expanded(
-            child: Text(
-              'Bộ sưu tập LEGO mới\nGiảm giá tới 50%',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                height: 1.3,
-              ),
-            ),
+  // ─── Banner carousel ───────────────────────────────────────────────────────
+  Widget _buildBannerCarousel(AppResponsive r) {
+    return Column(
+      children: [
+        SizedBox(
+          height: r.h(152),
+          child: PageView.builder(
+            controller: _bannerCtrl,
+            itemCount: _banners.length,
+            onPageChanged: (i) => setState(() => _bannerIndex = i),
+            itemBuilder: (_, i) {
+              final b = _banners[i];
+              return Container(
+                margin: EdgeInsets.symmetric(horizontal: r.w(2)),
+                padding: r.all(22),
+                decoration: BoxDecoration(
+                  borderRadius:
+                  BorderRadius.circular(AppColors.radiusXl),
+                  gradient: b.gradient,
+                  boxShadow: AppColors.coloredShadow(AppColors.primary),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: r.sym(10, 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(
+                                  AppColors.radiusSm),
+                            ),
+                            child: Text(b.label,
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: r.sp(9),
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 1.5)),
+                          ),
+                          SizedBox(height: r.h(10)),
+                          Text(b.title,
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: r.sp(22),
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -0.5,
+                                  height: 1.2)),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: r.w(80), height: r.w(80),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius:
+                        BorderRadius.circular(AppColors.radiusLg),
+                        border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.2)),
+                      ),
+                      child: Icon(b.icon,
+                          color: b.accentColor, size: r.icon(44)),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
-          Container(
-            width: 86,
-            height: 86,
-            decoration: BoxDecoration(
-              color: Colors.white24,
-              borderRadius: BorderRadius.circular(26),
-            ),
-            child: const Icon(
-              Icons.extension_rounded,
-              color: primaryYellow,
-              size: 56,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget buildCategoryCard(Map<String, dynamic> item) {
-    final Color color = item['color'] as Color;
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(22),
-      onTap: () {
-        Navigator.pushNamed(context, '/category');
-      },
-      child: Container(
-        width: 108,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
         ),
-        child: Column(
+        SizedBox(height: r.h(10)),
+        Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              item['icon'] as IconData,
-              color: color,
-              size: 30,
-            ),
-            const SizedBox(height: 10),
-            Text(
-              item['name'].toString(),
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w700,
+          children: List.generate(_banners.length, (i) {
+            final active = _bannerIndex == i;
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              margin: EdgeInsets.symmetric(horizontal: r.w(3)),
+              width:  active ? r.w(20) : r.w(6),
+              height: r.h(6),
+              decoration: BoxDecoration(
+                color: active ? AppColors.primary : AppColors.border,
+                borderRadius: BorderRadius.circular(r.r(10)),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget buildBottomNav() {
-    return BottomNavigationBar(
-      currentIndex: currentIndex,
-      selectedItemColor: darkBlue,
-      unselectedItemColor: Colors.grey,
-      type: BottomNavigationBarType.fixed,
-      onTap: handleBottomNav,
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_rounded),
-          label: 'Trang chủ',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.category_rounded),
-          label: 'Danh mục',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.receipt_long_rounded),
-          label: 'Đơn hàng',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.shopping_cart_rounded),
-          label: 'Giỏ hàng',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person_rounded),
-          label: 'Cá nhân',
+            );
+          }),
         ),
       ],
     );
   }
 
+  // ─── Category chip ─────────────────────────────────────────────────────────
+  Widget _buildCategoryChip(Map<String, dynamic> item, AppResponsive r) {
+    final Color color = item['color'] as Color;
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(context, '/category'),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: r.w(60), height: r.w(60),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppColors.radiusMd),
+              border: Border.all(color: color.withValues(alpha: 0.2)),
+            ),
+            child: Icon(item['icon'] as IconData,
+                color: color, size: r.icon(28)),
+          ),
+          SizedBox(height: r.h(6)),
+          Text(item['name'].toString(),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: r.sp(11),
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textMedium)),
+        ],
+      ),
+    );
+  }
+
+  // ─── Bottom nav ────────────────────────────────────────────────────────────
+  Widget _buildBottomNav(AppResponsive r) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: AppColors.floatingShadow(),
+      ),
+      child: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: _handleBottomNav,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.textLight,
+        elevation: 0,
+        selectedLabelStyle: TextStyle(
+            fontWeight: FontWeight.w700, fontSize: r.sp(11)),
+        unselectedLabelStyle: TextStyle(
+            fontWeight: FontWeight.w500, fontSize: r.sp(11)),
+        items: const [
+          BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home_rounded),
+              label: 'Trang chủ'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.grid_view_outlined),
+              activeIcon: Icon(Icons.grid_view_rounded),
+              label: 'Danh mục'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.receipt_long_outlined),
+              activeIcon: Icon(Icons.receipt_long_rounded),
+              label: 'Đơn hàng'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.shopping_bag_outlined),
+              activeIcon: Icon(Icons.shopping_bag_rounded),
+              label: 'Giỏ hàng'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline_rounded),
+              activeIcon: Icon(Icons.person_rounded),
+              label: 'Cá nhân'),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final r = AppResponsive(context);
+
     return Scaffold(
-      backgroundColor: bgColor,
-      bottomNavigationBar: buildBottomNav(),
+      backgroundColor: AppColors.background,
+      bottomNavigationBar: _buildBottomNav(r),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          padding: r.fromLTRB(20, 0, 20, 28),
           children: [
-            Row(
-              children: [
-                Image.asset(
-                  'assets/images/logo.png',
-                  height: 58,
+            // ── Header ────────────────────────────────────────────
+            SizedBox(height: r.h(16)),
+            Row(children: [
+              Container(
+                width: r.w(44), height: r.w(44),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius:
+                  BorderRadius.circular(AppColors.radiusMd),
+                  boxShadow: AppColors.softShadow(),
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    'Xin chào, $fullName 👋\nHôm nay bé muốn chơi gì?',
-                    style: const TextStyle(
-                      fontSize: 16.5,
-                      height: 1.35,
-                      fontWeight: FontWeight.w700,
-                      color: textDark,
+                padding: r.all(6),
+                child: Image.asset('assets/images/logo.png',
+                    fit: BoxFit.contain),
+              ),
+              SizedBox(width: r.w(12)),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Xin chào, ${fullName.split(' ').last} 👋',
+                      style: TextStyle(
+                          fontSize: r.sp(17),
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textDark,
+                          letterSpacing: -0.3),
+                    ),
+                    Text('Hôm nay bé muốn chơi gì?',
+                        style: TextStyle(
+                            fontSize: r.sp(13),
+                            color: AppColors.textGrey)),
+                  ],
+                ),
+              ),
+              Stack(children: [
+                Container(
+                  width: r.w(44), height: r.w(44),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius:
+                    BorderRadius.circular(AppColors.radiusMd),
+                    border: Border.all(color: AppColors.border),
+                    boxShadow: AppColors.softShadow(),
+                  ),
+                  child: Icon(Icons.notifications_none_rounded,
+                      color: AppColors.textDark, size: r.icon(22)),
+                ),
+                Positioned(
+                  top: r.h(8), right: r.w(8),
+                  child: Container(
+                    width: r.w(8), height: r.w(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentRed,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1.5),
                     ),
                   ),
                 ),
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: primaryYellow,
-                    borderRadius: BorderRadius.circular(16),
+              ]),
+            ]),
+
+            SizedBox(height: r.h(18)),
+            _buildSearchBar(r),
+
+            SizedBox(height: r.h(22)),
+            _buildBannerCarousel(r),
+
+            // ── Categories ──────────────────────────────────────────
+            SizedBox(height: r.h(26)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Danh mục',
+                    style: TextStyle(
+                        fontSize: r.sp(18),
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.textDark,
+                        letterSpacing: -0.3)),
+                TextButton(
+                  onPressed: () =>
+                      Navigator.pushNamed(context, '/category'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  child: const Icon(Icons.notifications_none_rounded),
+                  child: Text('Xem tất cả',
+                      style: TextStyle(
+                          fontSize: r.sp(13),
+                          fontWeight: FontWeight.w700)),
                 ),
               ],
             ),
-
-            const SizedBox(height: 24),
-            buildSearchBar(),
-
-            const SizedBox(height: 24),
-            buildBanner(),
-
-            const SizedBox(height: 28),
-
-            const Text(
-              'Danh mục',
-              style: TextStyle(
-                fontSize: 21,
-                fontWeight: FontWeight.w800,
-                color: textDark,
-              ),
+            SizedBox(height: r.h(14)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: _categories
+                  .map((c) => _buildCategoryChip(
+                  c as Map<String, dynamic>, r))
+                  .toList(),
             ),
 
-            const SizedBox(height: 14),
-
-            SizedBox(
-              height: 108,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: categories.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 14),
-                itemBuilder: (context, index) {
-                  return buildCategoryCard(categories[index]);
-                },
-              ),
+            // ── Products ────────────────────────────────────────────
+            SizedBox(height: r.h(26)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _searchText.isEmpty
+                      ? 'Sản phẩm nổi bật'
+                      : 'Kết quả tìm kiếm',
+                  style: TextStyle(
+                      fontSize: r.sp(18),
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.textDark,
+                      letterSpacing: -0.3),
+                ),
+                if (_searchText.isEmpty)
+                  Container(
+                    padding: r.sym(10, 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      borderRadius:
+                      BorderRadius.circular(AppColors.radiusSm),
+                    ),
+                    child: Text('Mới nhất',
+                        style: TextStyle(
+                            fontSize: r.sp(12),
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary)),
+                  ),
+              ],
             ),
-
-            const SizedBox(height: 28),
-
-            Text(
-              searchText.isEmpty ? 'Sản phẩm nổi bật' : 'Kết quả tìm kiếm',
-              style: const TextStyle(
-                fontSize: 21,
-                fontWeight: FontWeight.w800,
-                color: textDark,
-              ),
-            ),
-
-            const SizedBox(height: 14),
+            SizedBox(height: r.h(14)),
 
             StreamBuilder<List<ProductModel>>(
               stream: ProductService().getFeaturedProducts(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Padding(
-                    padding: EdgeInsets.all(30),
-                    child: Center(child: CircularProgressIndicator()),
+              builder: (context, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return Padding(
+                    padding: r.all(48),
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                          color: AppColors.primary),
+                    ),
                   );
                 }
-
-                if (snapshot.hasError) {
-                  return Text('Lỗi: ${snapshot.error}');
+                if (snap.hasError) {
+                  return Padding(
+                    padding: r.all(16),
+                    child: Text('Lỗi: ${snap.error}',
+                        style: const TextStyle(
+                            color: AppColors.accentRed)),
+                  );
                 }
-
-                final products = snapshot.data ?? [];
-
-                final filteredProducts = searchText.isEmpty
+                final products = snap.data ?? [];
+                final filtered = _searchText.isEmpty
                     ? products
-                    : products.where((product) {
-                  return product.name.toLowerCase().contains(searchText) ||
-                      product.category.toLowerCase().contains(searchText);
-                }).toList();
+                    : products
+                    .where((p) =>
+                p.name
+                    .toLowerCase()
+                    .contains(_searchText) ||
+                    p.category
+                        .toLowerCase()
+                        .contains(_searchText))
+                    .toList();
 
-                if (filteredProducts.isEmpty) {
-                  return Text(
-                    searchText.isEmpty
-                        ? 'Chưa có sản phẩm nào'
-                        : 'Không tìm thấy sản phẩm phù hợp',
-                    style: const TextStyle(color: textGrey),
+                if (filtered.isEmpty) {
+                  return Padding(
+                    padding: EdgeInsets.symmetric(vertical: r.h(40)),
+                    child: Center(
+                      child: Column(children: [
+                        Container(
+                          width: r.w(72), height: r.w(72),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceVariant,
+                            borderRadius: BorderRadius.circular(
+                                AppColors.radiusLg),
+                          ),
+                          child: Icon(Icons.search_off_rounded,
+                              color: AppColors.textLight,
+                              size: r.icon(36)),
+                        ),
+                        SizedBox(height: r.h(14)),
+                        Text(
+                          _searchText.isEmpty
+                              ? 'Chưa có sản phẩm nào'
+                              : 'Không tìm thấy "$_searchText"',
+                          style: TextStyle(
+                              color: AppColors.textGrey,
+                              fontWeight: FontWeight.w600,
+                              fontSize: r.sp(15)),
+                        ),
+                      ]),
+                    ),
                   );
                 }
+
+                // Tablet: 3 cột, phone: 2 cột
+                final crossCount = r.isTablet ? 3 : 2;
 
                 return GridView.builder(
-                  itemCount: filteredProducts.length,
+                  itemCount: filtered.length,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate:
-                  const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
+                  SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossCount,
+                    mainAxisSpacing: r.h(14),
+                    crossAxisSpacing: r.w(14),
                     childAspectRatio: 0.62,
                   ),
-                  itemBuilder: (context, index) {
-                    return buildProductCard(filteredProducts[index]);
-                  },
+                  itemBuilder: (_, i) =>
+                      _buildProductCard(filtered[i], r),
                 );
               },
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BannerItem {
+  final String label;
+  final String title;
+  final IconData icon;
+  final LinearGradient gradient;
+  final Color accentColor;
+
+  const _BannerItem({
+    required this.label,
+    required this.title,
+    required this.icon,
+    required this.gradient,
+    required this.accentColor,
+  });
+}
+
+// ─── Search bar tách riêng — chỉ rebuild chính nó khi gõ ─────────────────────
+class _SearchBar extends StatefulWidget {
+  final ValueChanged<String> onChanged;
+  final AppResponsive r;
+
+  const _SearchBar({required this.onChanged, required this.r});
+
+  @override
+  State<_SearchBar> createState() => _SearchBarState();
+}
+
+class _SearchBarState extends State<_SearchBar> {
+  final _ctrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final r = widget.r;
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppColors.radiusLg),
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppColors.softShadow(),
+      ),
+      child: TextField(
+        controller: _ctrl,
+        onChanged: (v) => widget.onChanged(v.trim().toLowerCase()),
+        style: TextStyle(fontSize: r.sp(15), color: AppColors.textDark),
+        decoration: InputDecoration(
+          hintText: 'Tìm LEGO, gấu bông, xe điều khiển...',
+          prefixIcon: Icon(Icons.search_rounded,
+              color: AppColors.textGrey, size: r.icon(22)),
+          border: InputBorder.none,
+          contentPadding: r.sym(16, 16),
+          suffixIcon: ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _ctrl,
+            builder: (_, val, __) => val.text.isEmpty
+                ? const SizedBox.shrink()
+                : IconButton(
+              icon: Icon(Icons.clear_rounded,
+                  color: AppColors.textGrey, size: r.icon(18)),
+              onPressed: () {
+                _ctrl.clear();
+                widget.onChanged('');
+              },
+            ),
+          ),
         ),
       ),
     );

@@ -1,15 +1,8 @@
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
 
 class OrderConfirmationScreen extends StatelessWidget {
   const OrderConfirmationScreen({super.key});
-
-  static const Color primaryBlue = Color(0xFF4A90E2);
-  static const Color darkBlue = Color(0xFF0B4DBA);
-  static const Color primaryYellow = Color(0xFFFFD93D);
-  static const Color successGreen = Color(0xFF22C55E);
-  static const Color bgColor = Color(0xFFF8FAFC);
-  static const Color textDark = Color(0xFF111827);
-  static const Color textGrey = Color(0xFF64748B);
 
   String formatPrice(int price) {
     return '${price.toString().replaceAllMapped(
@@ -42,37 +35,42 @@ class OrderConfirmationScreen extends StatelessWidget {
     final paymentMethod = data['paymentMethod']?.toString() ?? 'COD';
 
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           child: Column(
             children: [
               const Spacer(),
 
               Container(
-                width: 120,
-                height: 120,
+                width: 110,
+                height: 110,
                 decoration: BoxDecoration(
-                  color: successGreen.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(40),
+                  color: AppColors.success.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                  boxShadow: AppColors.premiumShadow(
+                    color: AppColors.success.withOpacity(0.1),
+                    blur: 16,
+                  ),
                 ),
                 child: const Icon(
                   Icons.check_circle_rounded,
-                  color: successGreen,
-                  size: 78,
+                  color: AppColors.success,
+                  size: 72,
                 ),
               ),
 
-              const SizedBox(height: 26),
+              const SizedBox(height: 30),
 
               const Text(
                 "Đặt hàng thành công!",
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 29,
+                  fontSize: 26,
                   fontWeight: FontWeight.w900,
-                  color: textDark,
+                  color: AppColors.textDark,
+                  letterSpacing: -0.5,
                 ),
               ),
 
@@ -82,28 +80,22 @@ class OrderConfirmationScreen extends StatelessWidget {
                 "Cảm ơn bạn đã mua sắm tại LegoKing.\nĐơn hàng của bạn đã được ghi nhận.",
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: textGrey,
-                  fontSize: 15.5,
-                  height: 1.55,
+                  color: AppColors.textGrey,
+                  fontSize: 15,
+                  height: 1.5,
                   fontWeight: FontWeight.w500,
                 ),
               ),
 
-              const SizedBox(height: 28),
+              const SizedBox(height: 32),
 
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: const Color(0xFFE5E7EB)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 22,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
+                  border: Border.all(color: AppColors.border),
+                  boxShadow: AppColors.premiumShadow(),
                 ),
                 child: Column(
                   children: [
@@ -112,7 +104,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                         const Text(
                           "Phương thức",
                           style: TextStyle(
-                            color: textGrey,
+                            color: AppColors.textGrey,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -122,7 +114,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                             paymentName(paymentMethod),
                             textAlign: TextAlign.right,
                             style: const TextStyle(
-                              color: textDark,
+                              color: AppColors.textDark,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
@@ -130,23 +122,23 @@ class OrderConfirmationScreen extends StatelessWidget {
                       ],
                     ),
 
-                    const Divider(height: 26),
+                    const Divider(height: 28, color: AppColors.border),
 
                     Row(
                       children: [
                         const Text(
                           "Tổng thanh toán",
                           style: TextStyle(
-                            color: textGrey,
-                            fontWeight: FontWeight.w700,
+                            color: AppColors.textGrey,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                         const Spacer(),
                         Text(
                           formatPrice(total),
                           style: const TextStyle(
-                            fontSize: 24,
-                            color: darkBlue,
+                            fontSize: 22,
+                            color: AppColors.primary,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
@@ -158,25 +150,36 @@ class OrderConfirmationScreen extends StatelessWidget {
 
               const Spacer(),
 
-              SizedBox(
+              Container(
                 width: double.infinity,
-                height: 58,
+                height: 56,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  gradient: AppColors.primaryGradient,
+                  boxShadow: AppColors.premiumShadow(
+                    color: AppColors.primary.withOpacity(0.25),
+                    blur: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ),
                 child: ElevatedButton.icon(
                   onPressed: () {
                     Navigator.pushReplacementNamed(context, '/home');
                   },
-                  icon: const Icon(Icons.home_rounded),
+                  icon: const Icon(Icons.home_rounded, color: Colors.white),
                   label: const Text(
                     "Về trang chủ",
                     style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                      color: Colors.white,
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: darkBlue,
+                    backgroundColor: Colors.transparent,
                     foregroundColor: Colors.white,
-                    elevation: 0,
+                    disabledBackgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -184,26 +187,33 @@ class OrderConfirmationScreen extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
               SizedBox(
                 width: double.infinity,
                 height: 54,
                 child: OutlinedButton.icon(
                   onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/orders');
+                    // Clear stack về home rồi push orders lên trên
+                    // → orders screen sẽ có nút quay lại về home
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/home',
+                          (route) => false,
+                    );
+                    Navigator.pushNamed(context, '/orders');
                   },
                   icon: const Icon(Icons.receipt_long_rounded),
                   label: const Text(
                     "Xem đơn hàng",
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
-                      fontSize: 16,
+                      fontSize: 15,
                     ),
                   ),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: darkBlue,
-                    side: const BorderSide(color: darkBlue),
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary, width: 1.5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -211,7 +221,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
             ],
           ),
         ),

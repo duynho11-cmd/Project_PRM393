@@ -1,85 +1,267 @@
-import 'package:flutter/material.dart';
-import '../services/cart_service.dart';
+import 'dart:io';
 
-class CheckoutScreen extends StatefulWidget {
-  const CheckoutScreen({super.key});
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../constants/app_colors.dart';
+
+class EditProfileScreen extends StatefulWidget {
+  const EditProfileScreen({super.key});
 
   @override
-  State<CheckoutScreen> createState() => _CheckoutScreenState();
+  State<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
-class _CheckoutScreenState extends State<CheckoutScreen> {
-  static const Color primaryBlue = Color(0xFF4A90E2);
-  static const Color darkBlue = Color(0xFF0B4DBA);
-  static const Color primaryYellow = Color(0xFFFFD93D);
-  static const Color bgColor = Color(0xFFF8FAFC);
-  static const Color textDark = Color(0xFF111827);
-  static const Color textGrey = Color(0xFF64748B);
-
+class _EditProfileScreenState extends State<EditProfileScreen> {
   final fullNameController = TextEditingController();
-  final phoneController = TextEditingController();
-  final addressController = TextEditingController();
+  final emailController = TextEditingController();
 
-  int shippingFee = 30000;
+  bool isLoading = false;
+  bool isFetching = true;
 
-  String formatPrice(int price) {
-    return '${price.toString().replaceAllMapped(
-      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-          (m) => '${m[1]}.',
-    )}đ';
+  File? selectedImage;
+  String photoUrl = '';
+
+  @override
+  void initState() {
+    super.initState();
+    loadUser();
   }
 
-  int getSubtotal(List<Map<String, dynamic>> items) {
-    int total = 0;
+  Future<void> loadUser() async {
+    final user = FirebaseAuth.instance.currentUser;
 
-    for (final item in items) {
-      final int price = (item['price'] as num?)?.toInt() ?? 0;
-      final int quantity = (item['quantity'] as num?)?.toInt() ?? 0;
-      total += price * quantity;
+    if (user == null) {
+      setState(() => isFetching = false);
+      return;
     }
 
-    return total;
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
+
+    if (!mounted) return;
+
+    final data = doc.data();
+
+    fullNameController.text = data?['fullName'] ?? user.displayName ?? '';
+    emailController.text = user.email ?? '';
+    photoUrl = data?['photoUrl'] ?? '';
+
+    setState(() => isFetching = false);
+  }
+
+  Future<void> pickImage() async {
+    final picker = ImagePicker();
+
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+
+    if (pickedFile == null) return;
+
+    setState(() {
+      selectedImage = File(pickedFile.path);
+    });
+  }
+
+  Future<String?> uploadImage(String uid) async {
+    if (selectedImage == null) return photoUrl;
+
+    try {
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('avatars')
+          .child('$uid.jpg');
+
+      await ref.putFile(selectedImage!);
+
+      return await ref.getDownloadURL();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<void> updateProfile() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final fullName = fullNameController.text.trim();
+
+    if (fullName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Vui lòng nhập họ tên"),
+          backgroundColor: AppColors.accentRed,
+        ),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      final imageUrl = await uploadImage(user.uid);
+
+      await user.updateDisplayName(fullName);
+
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+        'fullName': fullName,
+        'photoUrl': imageUrl ?? '',
+        'updatedAt': Timestamp.now(),
+      });
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Cập nhật thông tin thành công"),
+          backgroundColor: AppColors.success,
+        ),
+      );
+
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Lỗi cập nhật: $e"),
+          backgroundColor: AppColors.accentRed,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
+    }
   }
 
   @override
   void dispose() {
     fullNameController.dispose();
-    phoneController.dispose();
-    addressController.dispose();
+    emailController.dispose();
     super.dispose();
+  }
+
+  Widget buildAvatar() {
+    return Stack(
+      children: [
+        GestureDetector(
+          onTap: pickImage,
+          child: Container(
+            width: 104,
+            height: 104,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.18),
+              borderRadius: BorderRadius.circular(34),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.45),
+                width: 2,
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(32),
+              child: selectedImage != null
+                  ? Image.file(
+                selectedImage!,
+                fit: BoxFit.cover,
+              )
+                  : photoUrl.isNotEmpty
+                  ? Image.network(
+                photoUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) {
+                  return const Icon(
+                    Icons.person_rounded,
+                    size: 54,
+                    color: AppColors.secondary,
+                  );
+                },
+              )
+                  : const Icon(
+                Icons.person_rounded,
+                size: 54,
+                color: AppColors.secondary,
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          right: 0,
+          bottom: 0,
+          child: GestureDetector(
+            onTap: pickImage,
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.secondary,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white,
+                  width: 2,
+                ),
+                boxShadow: AppColors.premiumShadow(
+                  color: AppColors.secondary.withOpacity(0.3),
+                  blur: 6,
+                ),
+              ),
+              child: const Icon(
+                Icons.camera_alt_rounded,
+                color: AppColors.textDark,
+                size: 18,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget buildInput({
     required TextEditingController controller,
     required String label,
     required IconData icon,
-    int maxLines = 1,
-    TextInputType keyboardType = TextInputType.text,
+    bool readOnly = false,
   }) {
     return TextField(
       controller: controller,
-      maxLines: maxLines,
-      keyboardType: keyboardType,
+      readOnly: readOnly,
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: const TextStyle(color: AppColors.textGrey, fontSize: 15),
         prefixIcon: Icon(
           icon,
-          color: textGrey,
+          color: AppColors.textGrey,
+          size: 22,
         ),
+        suffixIcon: readOnly
+            ? const Icon(
+          Icons.lock_outline_rounded,
+          color: AppColors.textLight,
+          size: 20,
+        )
+            : null,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: readOnly ? const Color(0xFFF8FAFC) : Colors.white,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 18,
+          horizontal: 20,
           vertical: 18,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(22),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(20),
           borderSide: const BorderSide(
-            color: primaryBlue,
+            color: AppColors.primary,
             width: 1.5,
           ),
         ),
@@ -87,141 +269,39 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget buildSectionTitle({
-    required String title,
-    required IconData icon,
-  }) {
-    return Row(
-      children: [
-        Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: primaryBlue.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Icon(
-            icon,
-            color: darkBlue,
-            size: 21,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            color: textDark,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget buildProductItem(Map<String, dynamic> item) {
-    final name = item['name'] ?? '';
-    final image = item['image'] ?? '';
-    final price = (item['price'] as num?)?.toInt() ?? 0;
-    final quantity = (item['quantity'] as num?)?.toInt() ?? 0;
-    final itemTotal = price * quantity;
-
+  Widget buildHeader() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(28),
+        gradient: AppColors.primaryGradient,
+        boxShadow: AppColors.premiumShadow(
+          color: AppColors.primary.withOpacity(0.2),
+          blur: 24,
+          offset: const Offset(0, 10),
+        ),
       ),
-      child: Row(
+      child: Column(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(18),
-            child: Image.network(
-              image,
-              width: 76,
-              height: 76,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
-                width: 76,
-                height: 76,
-                color: const Color(0xFFF1F5F9),
-                child: const Icon(
-                  Icons.image_not_supported_outlined,
-                  color: textGrey,
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 12),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: textDark,
-                    fontWeight: FontWeight.w800,
-                    height: 1.25,
-                  ),
-                ),
-                const SizedBox(height: 7),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: primaryBlue.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        "x$quantity",
-                        style: const TextStyle(
-                          color: darkBlue,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      formatPrice(price),
-                      style: const TextStyle(
-                        color: textGrey,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 8),
-
-          Text(
-            formatPrice(itemTotal),
-            style: const TextStyle(
-              color: darkBlue,
+          buildAvatar(),
+          const SizedBox(height: 16),
+          const Text(
+            "Cập nhật hồ sơ",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
               fontWeight: FontWeight.w900,
-              fontSize: 14.5,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            "Nhấn vào ảnh để thay đổi ảnh đại diện",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -229,280 +309,137 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget buildSummaryRow({
-    required String label,
-    required String value,
-    bool isTotal = false,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: isTotal ? 16 : 14.5,
-              color: isTotal ? textDark : textGrey,
-              fontWeight: isTotal ? FontWeight.w900 : FontWeight.w600,
-            ),
-          ),
-          const Spacer(),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: isTotal ? 23 : 15,
-              color: isTotal ? darkBlue : textDark,
-              fontWeight: isTotal ? FontWeight.w900 : FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void goToPayment(List<Map<String, dynamic>> items) {
-    if (fullNameController.text.trim().isEmpty ||
-        phoneController.text.trim().isEmpty ||
-        addressController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Vui lòng nhập đầy đủ thông tin")),
-      );
-      return;
-    }
-
-    final subtotal = getSubtotal(items);
-    final total = subtotal + shippingFee;
-
-    Navigator.pushNamed(
-      context,
-      '/payment',
-      arguments: {
-        'items': items,
-        'fullName': fullNameController.text.trim(),
-        'phone': phoneController.text.trim(),
-        'address': addressController.text.trim(),
-        'subtotal': subtotal,
-        'shippingFee': shippingFee,
-        'total': total,
-      },
-    );
-  }
-
-  Widget buildEmptyCart() {
-    return const Center(
-      child: Text(
-        "Giỏ hàng đang trống",
-        style: TextStyle(
-          color: textGrey,
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-
-  Widget buildBottomSummary({
-    required BuildContext context,
-    required List<Map<String, dynamic>> items,
-    required int subtotal,
-    required int total,
-  }) {
+  Widget buildFormCard() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(28),
-        ),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 24,
-            color: Colors.black.withOpacity(0.08),
-            offset: const Offset(0, -8),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppColors.premiumShadow(),
       ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            buildSummaryRow(
-              label: "Tạm tính",
-              value: formatPrice(subtotal),
-            ),
-            buildSummaryRow(
-              label: "Phí vận chuyển",
-              value: formatPrice(shippingFee),
-            ),
-            const Divider(height: 22),
-            buildSummaryRow(
-              label: "Tổng cộng",
-              value: formatPrice(total),
-              isTotal: true,
-            ),
-            const SizedBox(height: 14),
-            SizedBox(
-              width: double.infinity,
-              height: 58,
-              child: ElevatedButton.icon(
-                onPressed: () => goToPayment(items),
-                icon: const Icon(Icons.arrow_forward_rounded),
-                label: const Text(
-                  "Tiếp tục thanh toán",
+      child: Column(
+        children: [
+          buildInput(
+            controller: fullNameController,
+            label: "Họ và tên",
+            icon: Icons.person_outline_rounded,
+          ),
+          const SizedBox(height: 16),
+          buildInput(
+            controller: emailController,
+            label: "Email",
+            icon: Icons.email_outlined,
+            readOnly: true,
+          ),
+          const SizedBox(height: 12),
+          const Row(
+            children: [
+              Icon(
+                Icons.info_outline_rounded,
+                color: AppColors.textGrey,
+                size: 18,
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  "Email không thể thay đổi trong màn này.",
                   style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 17,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: darkBlue,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+                    color: AppColors.textGrey,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildSaveButton() {
+    return Container(
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: AppColors.primaryGradient,
+        boxShadow: AppColors.premiumShadow(
+          color: AppColors.primary.withOpacity(0.25),
+          blur: 16,
+          offset: const Offset(0, 6),
         ),
       ),
+      child: ElevatedButton.icon(
+        onPressed: isLoading ? null : updateProfile,
+        icon: isLoading ? const SizedBox() : const Icon(Icons.save_outlined, color: Colors.white),
+        label: isLoading
+            ? const SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            color: Colors.white,
+            strokeWidth: 2.5,
+          ),
+        )
+            : const Text(
+          "Lưu thay đổi",
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 16,
+            color: Colors.white,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildLoading() {
+    return const Center(
+      child: CircularProgressIndicator(color: AppColors.primary),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
-          "Thanh toán",
+          "Chỉnh sửa hồ sơ",
           style: TextStyle(
-            color: textDark,
-            fontWeight: FontWeight.w800,
+            color: AppColors.textDark,
+            fontWeight: FontWeight.w900,
+            fontSize: 20,
+            letterSpacing: -0.5,
           ),
         ),
-        backgroundColor: bgColor,
-        foregroundColor: textDark,
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.textDark,
         elevation: 0,
         centerTitle: false,
       ),
-      body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: CartService().getCartItems(),
-        builder: (context, snapshot) {
-          final items = snapshot.data ?? [];
-
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: darkBlue),
-            );
-          }
-
-          if (items.isEmpty) {
-            return buildEmptyCart();
-          }
-
-          final subtotal = getSubtotal(items);
-          final total = subtotal + shippingFee;
-
-          return Column(
-            children: [
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(22),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(30),
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            darkBlue,
-                            primaryBlue,
-                          ],
-                        ),
-                      ),
-                      child: const Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              "Nhập thông tin\nnhận hàng",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w900,
-                                height: 1.25,
-                              ),
-                            ),
-                          ),
-                          Icon(
-                            Icons.local_shipping_rounded,
-                            color: primaryYellow,
-                            size: 62,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    buildSectionTitle(
-                      title: "Thông tin giao hàng",
-                      icon: Icons.location_on_outlined,
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    buildInput(
-                      controller: fullNameController,
-                      label: "Họ và tên",
-                      icon: Icons.person_outline_rounded,
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    buildInput(
-                      controller: phoneController,
-                      label: "Số điện thoại",
-                      icon: Icons.phone_outlined,
-                      keyboardType: TextInputType.phone,
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    buildInput(
-                      controller: addressController,
-                      label: "Địa chỉ giao hàng",
-                      icon: Icons.home_outlined,
-                      maxLines: 2,
-                    ),
-
-                    const SizedBox(height: 26),
-
-                    buildSectionTitle(
-                      title: "Sản phẩm đã chọn",
-                      icon: Icons.shopping_bag_outlined,
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    ...items.map(buildProductItem),
-                  ],
-                ),
-              ),
-
-              buildBottomSummary(
-                context: context,
-                items: items,
-                subtotal: subtotal,
-                total: total,
-              ),
-            ],
-          );
-        },
+      body: isFetching
+          ? buildLoading()
+          : ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+        children: [
+          buildHeader(),
+          const SizedBox(height: 24),
+          buildFormCard(),
+          const SizedBox(height: 24),
+          buildSaveButton(),
+        ],
       ),
     );
   }
